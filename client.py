@@ -3,11 +3,12 @@
 """GGGOM Geodistributed Getter Of Movies Client."""
 
 from __future__ import print_function
-import cmd
-import sys
+from cmd import Cmd
+from sys import stderr
+from twisted.internet import reactor
 
 
-class GggomClientShell(cmd.Cmd):
+class GggomClientShell(Cmd):
     """GGGOM Client Shell."""
 
     intro = (
@@ -115,8 +116,9 @@ class GggomClientShell(cmd.Cmd):
         return
 
     def _error(self, text):
-        print("ERROR:", text, file=sys.stderr)
+        print("ERROR:", text, file=stderr)
 
 
 if __name__ == '__main__':
-    GggomClientShell().cmdloop_with_interrupt()
+    reactor.callInThread(GggomClientShell().cmdloop_with_interrupt)
+    reactor.run()
