@@ -6,9 +6,11 @@ from __future__ import print_function
 import signal
 from cmd import Cmd
 from sys import stdin, stdout, stderr
-from twisted.internet import threads, reactor, defer
-from twisted.web.client import getPage
-from twisted.web.error import Error
+from optparse import OptionParser
+from twisted.internet import reactor
+
+from service import ClientService
+from movie import Movie, MovieList, Client, Server
 
 
 class GggomClientShell(Cmd):
@@ -21,6 +23,10 @@ class GggomClientShell(Cmd):
     prompt = 'gggom> '
     username = None
 
+    def __init__(self, service):
+        Cmd.__init__(self)
+        self.service = service
+
     # ======================================================================= #
     # Commands                                                                #
     # ======================================================================= #
@@ -30,8 +36,10 @@ class GggomClientShell(Cmd):
         if len(args) != 1:
             self._error("`register` takes a single argument")
         else:
-            print('Registering as user %s' % args[0])
-            self.username = args[0]
+            username = args[0]
+            print('Registering as user %s' % username)
+            d = self.service.register(username)
+            self.username = username
 
     def do_list_movies(self, arg):
         """Fetch the list of available movies from the Central Server."""
@@ -123,11 +131,41 @@ class GggomClientShell(Cmd):
     def _error(self, text):
         print("ERROR:", text, file=stderr)
 
+def parse_args():
+    usage = ("%prog [options] server_ip[:port]...\n\n"
+        "This is the client program.\n"
+        "If no port is given for the server, 40 is used.")
+
+    parser = OptionParser(usage)
+
+    options, args = parser.parse_args()
+
+    if len(args) != 1:
+        parser.error('Provide exactly one server address.')
+
+    def parse_address(arg):
+        if ':' not in arg:
+            host = arg
+            port = '40'
+        else:
+            host, port = arg.split(':', 1)
+
+        if not port.isdigit():
+            parser.error('Ports must be integers.')
+
+        return host, int(port)
+
+    host, port = parse_address(args[0])
+
+    return host, port, options
 
 def main():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    host, port, options = parse_args()
 
-    shell = GggomClientShell()
+    # signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    service = ClientService(reactor, host, port)
+    shell = GggomClientShell(service)
 
     reactor.callInThread(shell.cmdloop)
     reactor.run()
