@@ -3,9 +3,12 @@
 """GGGOM Geodistributed Getter Of Movies Client."""
 
 from __future__ import print_function
+import signal
 from cmd import Cmd
-from sys import stderr
-from twisted.internet import reactor
+from sys import stdin, stdout, stderr
+from twisted.internet import threads, reactor, defer
+from twisted.web.client import getPage
+from twisted.web.error import Error
 
 
 class GggomClientShell(Cmd):
@@ -13,11 +16,14 @@ class GggomClientShell(Cmd):
 
     intro = (
         'Welcome to the gggom shell.\n'
-        'Type help or ? to list commands.\n')
+        'Type help or ? to list commands.\n'
+        'To leave, use exit or ^D.\n')
     prompt = 'gggom> '
     username = None
 
-    # Commands
+    # ======================================================================= #
+    # Commands                                                                #
+    # ======================================================================= #
     def do_register(self, arg):
         """Register the user with the specified username."""
         args = arg.split()
@@ -71,7 +77,21 @@ class GggomClientShell(Cmd):
         print("^D")
         return self._leave(arg)
 
-    # Helper methods
+    # def inThread(self):
+    #     try:
+    #         result = threads.blockingCallFromThread(
+    #             reactor, getPage, "http://google.com/")
+    #     except Error, exc:
+    #         print(exc)
+    #     else:
+    #         print(result)
+    #
+    # def do_try(self, arg):
+    #     reactor.callInThread(self.inThread)
+
+    # ======================================================================= #
+    # Helper Methods                                                          #
+    # ======================================================================= #
     def precmd(self, line):
         """Hook method for preprocessing commands.
 
@@ -91,24 +111,9 @@ class GggomClientShell(Cmd):
         """
         pass
 
-    def cmdloop_with_interrupt(self):
-        """Shell loop.
-
-        Repeatedly issue a prompt, accept input, parse an initial prefix
-        off the received input, and dispatch to action methods, passing them
-        the remainder of the line as argument, while catching
-        KeyboardInterrupts.
-
-        """
-        print(self.intro)
-        try:
-            self.cmdloop(intro="")
-        except KeyboardInterrupt:
-            print("^C")
-            return True
-
     def _leave(self, arg):
         print('Thank you for using GGGOM.')
+        reactor.callFromThread(reactor.stop)
         return True
 
     def _must_register(self):
@@ -119,6 +124,14 @@ class GggomClientShell(Cmd):
         print("ERROR:", text, file=stderr)
 
 
-if __name__ == '__main__':
-    reactor.callInThread(GggomClientShell().cmdloop_with_interrupt)
+def main():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    shell = GggomClientShell()
+
+    reactor.callInThread(shell.cmdloop)
     reactor.run()
+
+
+if __name__ == '__main__':
+    main()
