@@ -94,13 +94,20 @@ class ClientList:
         return False
 
     def add_client(self, client, request=None):
+        """Adds a client if it doesn't exist, if it does exist it adds a new request to it.
+           Returns None when the client exists and we're not adding a new request to it"""
         if request is not None:
             if client not in self.clients:
                 self.clients[client] = RequestList()
             else:
                 self.clients[client].add_request(request)
+            return client
         else:
-            self.clients[client] = RequestList()
+            if client not in self.clients:
+                self.clients[client] = RequestList()
+                return client
+            else:
+                return None
 
     def get_client_dict(self):
         return self.clients
@@ -156,11 +163,11 @@ class Server:
         if (client, movie) in self.active_downloads:
             self.active_downloads.remove((client, movie))
             self.finished_downloads.append((client, movie))
-        exists = false
+        exists = False
         for m in self.downloaded_movies:
             if movie in m[0]:
                 m[1] += 1
-                exists = true
+                exists = True
         if not exists:
             self.downloaded_movies.append((movie, 1))
 
@@ -180,7 +187,7 @@ class ServerList:
     def get_server_list(self):
         return self.servers
 
-    def get_server(self, host, port):
+    def get_server_with_host(self, host, port):
         for server in self.servers:
             if server.get_host() == host and server.get_port() == port:
                 return server

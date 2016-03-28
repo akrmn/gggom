@@ -2,7 +2,7 @@
 """GGGOM Geodistributed Getter Of Movies Client Service."""
 
 from __future__ import print_function
-from factory import Register, ListMovies
+from client_factory import Register, ListMovies
 
 
 class ClientService:
