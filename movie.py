@@ -181,11 +181,15 @@ class ServerList:
 
     def is_element(self, server):
         for s in self.servers:
-            if s == server: return True
+            if s.host == server.host and s.port == server.port: return True
         return False
 
     def add_server(self, server):
-        self.servers.append(server)
+        if not self.is_element(server):
+            self.servers.append(server)
+            return server
+        else:
+            return None
 
     def get_server_list(self):
         return self.servers

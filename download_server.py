@@ -10,64 +10,65 @@ from optparse import OptionParser
 from twisted.internet import reactor
 from tabulate import tabulate
 
-from central_server_service import ClientService, DownloadServerService
+from download_server_service import ClientService, CentralServerService
 from movie import Movie, MovieList, Client, Server
 
 
-class GggomCentralServerShell(Cmd):
-    """GGGOM Central Server Shell."""
+class GggomDownloadServerShell(Cmd):
+    """GGGOM Download Server Shell."""
 
     intro = (
         'Welcome to the gggom shell.\n'
         'Type help or ? to list commands.\n'
         'To leave, use exit or ^D.\n')
     prompt = 'gggom> '
+    movies = []
 
     def __init__(self, client_service, server_service):
         Cmd.__init__(self)
         self.client_service = client_service
         self.server_service = server_service
+        self.movies.append(Movie('fakeone', "Harry Potter and the Fakey Fake", 35))
+        self.movies.append(Movie('phoney', "Draco Malfoy and the Dark Lord", 35))
+        def callback(result):
+            print('Registered successfully')
+
+        def errback(reason):
+            _error(reason.getErrorMessage())
+
+        self.server_service.register(self.movies, callback, errback)
+        self.client_service.add_movie_list(self.movies)
+
 
     # ======================================================================= #
     # Commands                                                                #
     # ======================================================================= #
-    def do_movies_by_server(self, arg):
-        """List the available movies by server."""
+    def do_view_downloads(self, arg):
+        """List the current downloads."""
         args = arg.split()
 
         if len(args) != 0:
-            _error('`movies_by_server` doesn\'t expect any arguments.')
+            _error('`view_downloads` doesn\'t expect any arguments.')
 
         else:
-            print('1 available server(s)')
-            #def callback(result):
-            #    print("%i available server(s):" % len(result))
+            print('9 downloads: (...)')
 
-            #    print(tabulate(
-            #        [movie.to_row() for movie in result],
-            #        headers=['Id', 'Title', 'Size'], tablefmt="psql"))
-
-            #def errback(reason):
-            #    _error(reason.getErrorMessage())
-
-            #self.service.list_movies(callback, errback)
-
-    def do_downloads_by_server(self, arg):
-        """List the movies requested by servers and how many times they were requested."""
+    def do_downloaded_movies(self, arg):
+        """List what movies have been downloaded and how many times."""
         args = arg.split()
         if len(args) != 0:
-            _error('`downloads_by_server` doesn\'t expect any arguments.')
+            _error('`downloaded_movies` doesn\'t expect any arguments.')
         else:
-            print('server 1: fakemovie requested 23 times')
+            print('fakemovie downloads: 15')
 
-    def do_clients_by_server(self, arg):
-        """List the clients handled by each server"""
+    def do_list_clients(self, arg):
+        """List the clients that download movies from the server."""
 
         args = arg.split()
         if len(args) != 0:
-            _error('`clients_by_server` doesn\'t expect any arguments.')
+            _error('`list_clients` doesn\'t expect any arguments.')
         else:
-            print('server 1: 6 clients')
+            print('client 1: best_client, 192.168.2.1')
 
     def do_exit(self, arg):
         """Stop downloads and exit."""
@@ -115,46 +116,51 @@ def _error(text):
 
 
 def parse_args():
-    usage = ("%prog [options]...\n\n"
-             "This is the central server program.\n"
-             "If no port is given for the server, 26 is used.\n"
-             "If no port is given for the client, 40 is used.")
+    usage = ("%prog [options] server_ip[:port] listen_port...\n\n"
+             "This is the download server program.\n"
+             "If no port is given for the server, 26 is used.")
 
     parser = OptionParser(usage)
 
-    help = "The port to listen on for servers. Default is 26."
-    parser.add_option('--server-port', type='int', help=help, dest="server_port")
-
-    help = "The port to listen on for clients. Default is 40."
-    parser.add_option('--client-port', type='int', help=help, dest="client_port")
+    help = "The port to listen on. Default is 16."
+    parser.add_option('--port', type='int', help=help)
 
     options, args = parser.parse_args()
 
-    if len(args) != 0:
-        parser.error("No arguments are expected")
+    if len(args) != 2:
+        parser.error('Provide one server address and a port for listening.')
 
-    def parse_port(port):
+    def parse_address(arg):
+        if ':' not in arg:
+            host = arg
+            port = '26'
+        else:
+            host, port = arg.split(':', 1)
+
         if not port.isdigit():
             parser.error('Ports must be integers.')
 
-        return int(port)
+        return host, int(port)
 
-    if (options.client_port is not None):
-        client_port = parse_port(options.client_port)
-    if (options.server_port is not None):
-        server_port = parse_port(options.server_port)
+    def parse_port(arg):
+        if not arg.isdigit():
+            parser.error('Ports must be integers.')
+        return int(arg)
 
-    return options
+    host, port = parse_address(args[0])
+    listen_port = parse_port(args[1])
+
+    return host, port, listen_port, options
 
 
 def main():
-    options = parse_args()
+    server_host, server_port, listen_port, options = parse_args()
 
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    client_service = ClientService(reactor, options.client_port or 40)
-    server_service = DownloadServerService(reactor, options.server_port or 26)
-    shell = GggomCentralServerShell(client_service, server_service)
+    client_service = ClientService(reactor, listen_port)
+    server_service = CentralServerService(reactor, server_host, server_port, listen_port)
+    shell = GggomDownloadServerShell(client_service, server_service)
 
     reactor.callInThread(shell.cmdloop)
     reactor.run()

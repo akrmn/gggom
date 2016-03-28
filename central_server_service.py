@@ -2,18 +2,29 @@
 """GGGOM Geodistributed Getter Of Movies Client Service."""
 
 from __future__ import print_function
-from central_server_factory import ClientFact
+from central_server_factory import ClientFact, DownloadServerFactory
 
 
 class ClientService:
-    def __init__(self, reactor, host, port):
+    def __init__(self, reactor, port):
         self.reactor = reactor
-        self.host = host
-        self.port = port
+        self.port = int(port)
         self.start_listening()
 
     def start_listening(self):
         factory = ClientFact()
+
+        self.reactor.callFromThread(
+            self.reactor.listenTCP, self.port, factory)
+
+class DownloadServerService:
+    def __init__(self, reactor, port):
+        self.reactor = reactor
+        self.port = int(port)
+        self.start_listening()
+
+    def start_listening(self):
+        factory = DownloadServerFactory()
 
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, factory)
