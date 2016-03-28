@@ -18,6 +18,9 @@ class Movie:
     def __str__(self):
         return "id: " + self.id_movie + ", title: " + self.title + ", size: " + str(self.size)
 
+    def to_string(self):
+        return "id: " + self.id_movie + ", title: " + self.title + ", size: " + str(self.size)
+
     def __repr__(self):
         return "Movie(" + self.id_movie + ", " + self.title + ", " + str(self.size) + ")"
 
@@ -34,8 +37,14 @@ class MovieList:
             if m == movie: return True
         return False
 
+    def is_empty(self):
+        if self.movies:
+            return False
+        else:
+            return True
+
     def add_movie(self, movie, server):
-        if movie not in self.movies:
+        if not self.is_element(movie):
             self.movies[movie] = ServerList().add_server(server)
         else:
             self.movies[movie].add_server(server)
@@ -56,13 +65,13 @@ class MovieList:
         for movie in self.movies:
             print movie.to_string()
             print 'server:'
-            for server in self.get_servers().get_server_list():
+            for server in self.get_servers(movie).get_server_list():
                 print server.to_string()
             print '---------------------'
 
     def get_download_server_list(self, movie):
         #Idealmente luego queremos devolver solo un servidor, el ideal
-        return self.get_servers().get_server_list()
+        return self.get_servers(movie).get_server_list()
 
 class Client:
 
@@ -183,6 +192,12 @@ class ServerList:
         for s in self.servers:
             if s.host == server.host and s.port == server.port: return True
         return False
+
+    def is_empty(self):
+        if self.servers:
+            return False
+        else:
+            return True
 
     def add_server(self, server):
         if not self.is_element(server):

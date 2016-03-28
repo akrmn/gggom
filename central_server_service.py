@@ -24,7 +24,10 @@ class DownloadServerService:
         self.start_listening()
 
     def start_listening(self):
-        factory = DownloadServerFactory()
+        self.factory = DownloadServerFactory()
 
         self.reactor.callFromThread(
-            self.reactor.listenTCP, self.port, factory)
+            self.reactor.listenTCP, self.port, self.factory)
+
+    def movies_by_server(self):
+        return self.factory.movies, self.factory.servers

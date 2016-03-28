@@ -116,9 +116,10 @@ def _error(text):
 
 
 def parse_args():
-    usage = ("%prog [options] server_ip[:port] listen_port...\n\n"
+    usage = ("%prog [options] server_ip[:port]...\n\n"
              "This is the download server program.\n"
-             "If no port is given for the server, 26 is used.")
+             "If no port is given for the server, 26 is used.\n"
+             "If no port is given as an option to listen to clients, 16 is used.")
 
     parser = OptionParser(usage)
 
@@ -127,8 +128,8 @@ def parse_args():
 
     options, args = parser.parse_args()
 
-    if len(args) != 2:
-        parser.error('Provide one server address and a port for listening.')
+    if len(args) != 1:
+        parser.error('Provide exactly one server address.')
 
     def parse_address(arg):
         if ':' not in arg:
@@ -142,24 +143,18 @@ def parse_args():
 
         return host, int(port)
 
-    def parse_port(arg):
-        if not arg.isdigit():
-            parser.error('Ports must be integers.')
-        return int(arg)
-
     host, port = parse_address(args[0])
-    listen_port = parse_port(args[1])
 
-    return host, port, listen_port, options
+    return host, port, options
 
 
 def main():
-    server_host, server_port, listen_port, options = parse_args()
+    server_host, server_port, options = parse_args()
 
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    client_service = ClientService(reactor, listen_port)
-    server_service = CentralServerService(reactor, server_host, server_port, listen_port)
+    client_service = ClientService(reactor, options.port or 16)
+    server_service = CentralServerService(reactor, server_host, server_port, options.port or 16)
     shell = GggomDownloadServerShell(client_service, server_service)
 
     reactor.callInThread(shell.cmdloop)

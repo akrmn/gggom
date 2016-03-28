@@ -39,18 +39,25 @@ class GggomCentralServerShell(Cmd):
             _error('`movies_by_server` doesn\'t expect any arguments.')
 
         else:
-            print('1 available server(s)')
-            #def callback(result):
-            #    print("%i available server(s):" % len(result))
+            def print_movies_by_server(movies, servers):
+                if not servers.is_empty():
+                    print("%i available server(s):" % len(servers.get_server_list()))
+                    print('')
+                    for server in servers.get_server_list():
+                        print('server:')
+                        print(server.to_string())
+                        print('movies:')
+                        if not movies.is_empty():
+                            print(tabulate(
+                                [movie.to_row() for movie in movies.get_movie_dict() if server == movies.get_servers(movie)],
+                                headers=['Id', 'Title', 'Size'], tablefmt="psql"))
+                            print('')
+                        else: print('No movies\n')
+                else:
+                    print('There\'s no available servers')
 
-            #    print(tabulate(
-            #        [movie.to_row() for movie in result],
-            #        headers=['Id', 'Title', 'Size'], tablefmt="psql"))
-
-            #def errback(reason):
-            #    _error(reason.getErrorMessage())
-
-            #self.service.list_movies(callback, errback)
+            movies, servers = self.server_service.movies_by_server()
+            print_movies_by_server(movies, servers)
 
     def do_downloads_by_server(self, arg):
         """List the movies requested by servers and how many times they were requested."""
