@@ -45,7 +45,7 @@ class ClientProtocol(XmlStream):
             self.client = Client(self.username, self.host, self.port)
             result = self.factory.clients.add_client(self.client)
             if result is None:
-                'Client ', self.client.to_string(), 'is already registered.'
+                print('Client ', self.client.to_string(), 'is already registered.')
                 self.registration_failed('Client already registered')
             else:
                 print('Se agregó el nuevo cliente: ', self.client.to_string())

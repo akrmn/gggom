@@ -80,10 +80,6 @@ class ListMovieServerProtocol(XmlStream):
     def onDocumentEnd(self):
         """ Parsing has finished, you should send your response now """
         if self.action == 'movie_list':
-            self.movies.append(
-                Movie('fakeone', "Harry Potter and the Fakey Fake", 35))
-            self.movies.append(
-                Movie('phoney', "Draco Malfoy and the Dark Lord", 42))
             self.factory.deferred.callback(self.movies)
             self.factory.lock.release()
 
