@@ -4,7 +4,6 @@
 from __future__ import print_function
 import signal
 from cmd import Cmd
-from sys import stdin, stdout, stderr
 from optparse import OptionParser
 from twisted.internet import reactor
 from tabulate import tabulate

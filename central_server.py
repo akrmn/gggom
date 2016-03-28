@@ -4,7 +4,6 @@
 from __future__ import print_function
 import signal
 from cmd import Cmd
-from sys import stdin, stdout, stderr
 from optparse import OptionParser
 from twisted.internet import reactor
 from tabulate import tabulate
@@ -116,10 +115,6 @@ class GggomCentralServerShell(Cmd):
         print('Thank you for using GGGOM.')
         reactor.callFromThread(reactor.stop)
         return True
-
-
-def common.error(text):
-    print("ERROR:", text, file=stderr)
 
 
 class CentralServer:

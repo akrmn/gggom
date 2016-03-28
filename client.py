@@ -3,7 +3,6 @@
 
 from __future__ import print_function
 from cmd import Cmd
-from sys import stdin, stdout, stderr
 from twisted.internet import reactor
 from tabulate import tabulate
 
@@ -133,10 +132,6 @@ class GggomClientShell(Cmd):
     def _must_register(self):
         common.error("You must `register` before issuing this command.")
         return
-
-
-def common.error(text):
-    print("ERROR:", text, file=stderr)
 
 
 class Client:
