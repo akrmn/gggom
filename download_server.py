@@ -11,6 +11,7 @@ from tabulate import tabulate
 
 from download_server_service import ClientService, CentralServerService
 from movie import Movie
+import common
 
 
 class GggomDownloadServerShell(Cmd):
@@ -36,7 +37,7 @@ class GggomDownloadServerShell(Cmd):
         args = arg.split()
 
         if len(args) != 0:
-            _error('`view_downloads` doesn\'t expect any arguments.')
+            common.error('`view_downloads` doesn\'t expect any arguments.')
 
         else:
             print('9 downloads: (...)')
@@ -45,7 +46,7 @@ class GggomDownloadServerShell(Cmd):
         """List what movies have been downloaded and how many times."""
         args = arg.split()
         if len(args) != 0:
-            _error('`downloaded_movies` doesn\'t expect any arguments.')
+            common.error('`downloaded_movies` doesn\'t expect any arguments.')
         else:
             print('fakemovie downloads: 15')
 
@@ -54,7 +55,7 @@ class GggomDownloadServerShell(Cmd):
 
         args = arg.split()
         if len(args) != 0:
-            _error('`list_clients` doesn\'t expect any arguments.')
+            common.error('`list_clients` doesn\'t expect any arguments.')
         else:
             print('client 1: best_client, 192.168.2.1')
 
@@ -94,11 +95,6 @@ class GggomDownloadServerShell(Cmd):
         reactor.callFromThread(reactor.stop)
         return True
 
-
-def _error(text):
-    print("ERROR:", text, file=stderr)
-
-
 class DownloadServer:
     def __init__(self, host, port, client_port, options):
         self.host = host
@@ -120,7 +116,7 @@ class DownloadServer:
             self.shell.cmdloop()
 
         def errback(reason):
-            _error(reason.getErrorMessage())
+            common.error(reason.getErrorMessage())
             reactor.callFromThread(self.reactor.stop)
 
 

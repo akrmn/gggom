@@ -9,6 +9,7 @@ from tabulate import tabulate
 
 from client_service import ClientService
 from movie import Movie
+import common
 
 
 class GggomClientShell(Cmd):
@@ -33,7 +34,7 @@ class GggomClientShell(Cmd):
         args = arg.split()
 
         if len(args) != 1:
-            _error("`register` takes a single argument")
+            common.error("`register` takes a single argument")
 
         else:
             username = args[0]
@@ -43,7 +44,7 @@ class GggomClientShell(Cmd):
                 self.username = username
 
             def errback(reason):
-                _error(reason.getErrorMessage())
+                common.error(reason.getErrorMessage())
 
             self.service.register(username, callback, errback)
 
@@ -52,7 +53,7 @@ class GggomClientShell(Cmd):
         args = arg.split()
 
         if len(args) != 0:
-            _error('`list_movies` doesn\'t expect any arguments.')
+            common.error('`list_movies` doesn\'t expect any arguments.')
 
         else:
             def callback(result):
@@ -63,7 +64,7 @@ class GggomClientShell(Cmd):
                     headers=['Id', 'Title', 'Size'], tablefmt="psql"))
 
             def errback(reason):
-                _error(reason.getErrorMessage())
+                common.error(reason.getErrorMessage())
 
             self.service.list_movies(callback, errback)
 
@@ -74,7 +75,7 @@ class GggomClientShell(Cmd):
 
         args = arg.split()
         if len(args) == 0:
-            _error('`download` expects one argument.')
+            common.error('`download` expects one argument.')
         else:  # I think it could work for many movies at the same time
             for movie in args:
                 print('Downloading %s' % movie)
@@ -87,7 +88,7 @@ class GggomClientShell(Cmd):
 
         args = arg.split()
         if len(args) == 0:
-            _error('`status` expects one argument.')
+            common.error('`status` expects one argument.')
         else:  # I think it could work for many movies at the same time
             for movie in args:
                 print('The status of %s is ok.' % movie)
@@ -130,11 +131,11 @@ class GggomClientShell(Cmd):
         return True
 
     def _must_register(self):
-        _error("You must `register` before issuing this command.")
+        common.error("You must `register` before issuing this command.")
         return
 
 
-def _error(text):
+def common.error(text):
     print("ERROR:", text, file=stderr)
 
 

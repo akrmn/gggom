@@ -11,6 +11,7 @@ from tabulate import tabulate
 
 from central_server_service import ClientService, DownloadServerService
 from movie import Movie
+import common
 
 
 class GggomCentralServerShell(Cmd):
@@ -35,7 +36,7 @@ class GggomCentralServerShell(Cmd):
         args = arg.split()
 
         if len(args) != 0:
-            _error('`movies_by_server` doesn\'t expect any arguments.')
+            common.error('`movies_by_server` doesn\'t expect any arguments.')
 
         else:
             def print_movies_by_server(movies, servers):
@@ -67,7 +68,7 @@ class GggomCentralServerShell(Cmd):
         """List the movies requested by servers and number of requests."""
         args = arg.split()
         if len(args) != 0:
-            _error('`downloads_by_server` doesn\'t expect any arguments.')
+            common.error('`downloads_by_server` doesn\'t expect any arguments.')
         else:
             print('server 1: fakemovie requested 23 times')
 
@@ -76,7 +77,7 @@ class GggomCentralServerShell(Cmd):
 
         args = arg.split()
         if len(args) != 0:
-            _error('`clients_by_server` doesn\'t expect any arguments.')
+            common.error('`clients_by_server` doesn\'t expect any arguments.')
         else:
             print('server 1: 6 clients')
 
@@ -117,7 +118,7 @@ class GggomCentralServerShell(Cmd):
         return True
 
 
-def _error(text):
+def common.error(text):
     print("ERROR:", text, file=stderr)
 
 
