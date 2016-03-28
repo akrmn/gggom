@@ -63,20 +63,17 @@ class ClientProtocol(XmlStream):
             m['title'] = movie.get_title()
             m['size'] = str(movie.get_size())
         self.send(request)
-        self.factory.lock.release()
 
     def registration_ok(self):
         response = Element((None, 'registration_reply'))
         response['reply'] = 'Ok'
         self.send(response)
-        self.factory.lock.release()
 
     def registration_failed(self, reason):
         response = Element((None, 'registration_reply'))
         response['reply'] = 'Failed'
         response['reason'] = reason
         self.send(response)
-        self.factory.lock.release()
 
 class ClientFact(ClientFactory):
 

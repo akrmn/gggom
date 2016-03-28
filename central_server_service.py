@@ -14,8 +14,6 @@ class ClientService:
 
     def start_listening(self):
         factory = ClientFact()
-        factory.lock.acquire()
 
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.host, self.port, factory)
-        factory.lock.release()
