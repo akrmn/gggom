@@ -8,6 +8,7 @@ from cmd import Cmd
 from sys import stdin, stdout, stderr
 from optparse import OptionParser
 from twisted.internet import reactor
+from tabulate import tabulate
 
 from service import ClientService
 from movie import Movie, MovieList, Client, Server
@@ -33,24 +34,41 @@ class GggomClientShell(Cmd):
     def do_register(self, arg):
         """Register the user with the specified username."""
         args = arg.split()
+
         if len(args) != 1:
-            self._error("`register` takes a single argument")
+            _error("`register` takes a single argument")
+
         else:
             username = args[0]
-            print('Registering as user %s' % username)
-            d = self.service.register(username)
-            self.username = username
+
+            def callback(result):
+                print('Registered successfully')
+                self.username = username
+
+            def errback(reason):
+                _error(reason.getErrorMessage())
+
+            self.service.register(username, callback, errback)
 
     def do_list_movies(self, arg):
         """Fetch the list of available movies from the Central Server."""
-        if self.username is None:
-            return self._must_register()
-
         args = arg.split()
-        if len(args) == 0:
-            print('Fetching movie list from the Central Server.')
-        elif len(args) != 0:
-            self._error('`list_movies` doesn\'t expect any arguments.')
+
+        if len(args) != 0:
+            _error('`list_movies` doesn\'t expect any arguments.')
+
+        else:
+            def callback(result):
+                print("%i available movie(s):" % len(result))
+
+                print(tabulate(
+                    [movie.to_row() for movie in result],
+                    headers=['Id', 'Title', 'Size'], tablefmt="psql"))
+
+            def errback(reason):
+                _error(reason.getErrorMessage())
+
+            self.service.list_movies(callback, errback)
 
     def do_download(self, arg):
         """Begin downloading the specified movie."""
@@ -59,10 +77,11 @@ class GggomClientShell(Cmd):
 
         args = arg.split()
         if len(args) == 0:
-            self._error('`download` expects one argument.')
+            _error('`download` expects one argument.')
         else:  # I think it could work for many movies at the same time
             for movie in args:
                 print('Downloading %s' % movie)
+                print('/stub/')
 
     def do_status(self, arg):
         """Show the status of the specified movie."""
@@ -71,10 +90,11 @@ class GggomClientShell(Cmd):
 
         args = arg.split()
         if len(args) == 0:
-            self._error('`status` expects one argument.')
+            _error('`status` expects one argument.')
         else:  # I think it could work for many movies at the same time
             for movie in args:
                 print('The status of %s is ok.' % movie)
+                print('/stub/')
 
     def do_exit(self, arg):
         """Stop downloads and exit."""
@@ -84,18 +104,6 @@ class GggomClientShell(Cmd):
         """Stop downloads and exit."""
         print("^D")
         return self._leave(arg)
-
-    # def inThread(self):
-    #     try:
-    #         result = threads.blockingCallFromThread(
-    #             reactor, getPage, "http://google.com/")
-    #     except Error, exc:
-    #         print(exc)
-    #     else:
-    #         print(result)
-    #
-    # def do_try(self, arg):
-    #     reactor.callInThread(self.inThread)
 
     # ======================================================================= #
     # Helper Methods                                                          #
@@ -125,16 +133,18 @@ class GggomClientShell(Cmd):
         return True
 
     def _must_register(self):
-        self._error("You must `register` before issuing this command.")
+        _error("You must `register` before issuing this command.")
         return
 
-    def _error(self, text):
-        print("ERROR:", text, file=stderr)
+
+def _error(text):
+    print("ERROR:", text, file=stderr)
+
 
 def parse_args():
     usage = ("%prog [options] server_ip[:port]...\n\n"
-        "This is the client program.\n"
-        "If no port is given for the server, 40 is used.")
+             "This is the client program.\n"
+             "If no port is given for the server, 40 is used.")
 
     parser = OptionParser(usage)
 
@@ -159,10 +169,11 @@ def parse_args():
 
     return host, port, options
 
+
 def main():
     host, port, options = parse_args()
 
-    # signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     service = ClientService(reactor, host, port)
     shell = GggomClientShell(service)

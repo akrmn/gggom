@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 """GGGOM Geodistributed Getter Of Movies Protocols and Factories."""
 
+from __future__ import print_function
 from twisted.internet.protocol import ClientFactory
 from twisted.words.xish.xmlstream import XmlStream
 from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element, IElement
+from twisted.python.failure import Failure
+
+from threading import Lock
+
+from movie import Movie, MovieList, Client, Server
+
 
 class RegisterServerProtocol(XmlStream):
 
@@ -12,48 +19,23 @@ class RegisterServerProtocol(XmlStream):
         XmlStream.__init__(self)    # possibly unnecessary
         self._initializeStream()
 
-    def sendObject(self, obj):
-        # if IElement.providedBy(obj):
-        #     print("[TX]: %s" % obj.toXml())
-        # else:
-        #     print("[TX]: %s" % obj)
-        self.send(obj)
-
     def connectionMade(self):
         request = Element((None, 'register_client'))
         request['host'] = self.transport.getHost().host
         request['port'] = str(self.transport.getHost().port)
         request.addElement('username').addContent(self.factory.username)
-        self.sendObject(request)
-
-    def dataReceived(self, data):
-        """ Overload this function to simply pass the incoming data into the XML parser """
-        print("RSP data received")
-
-        try:
-            self.stream.parse(data)
-        except Exception as e:
-            self._initializeStream()
+        self.send(request)
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
-        print('Root tag: {0}'.format(elementRoot.name))
-        print('Attributes: {0}'.format(elementRoot.attributes))
         if elementRoot.name == 'registration_reply':
-            self.action = 'registration_reply'
-            if (elementRoot.attributes['reply'] == 'Ok'):
-                print('Se registró exitosamente en el servidor central')
+            if elementRoot.attributes['reply'] == 'Ok':
+                self.factory.deferred.callback('Ok')
             else:
-                print('No se registró en el servidor central')
+                self.factory.deferred.errback(
+                    Failure(elementRoot.attributes['reason']))
+        self.factory.lock.release()
 
-    def onElement(self, element):
-        """ Children/Body elements parsed """
-        print('\nElement tag: {0}'.format(element.name))
-        print('Element attributes: {0}'.format(element.attributes))
-        print('Element content: {0}'.format(element))
-
-    def onDocumentEnd(self):
-        """ Parsing has finished, you should send your response now """
 
 class Register(ClientFactory):
 
@@ -62,13 +44,58 @@ class Register(ClientFactory):
     def __init__(self, username):
         self.deferred = Deferred()
         self.username = username
-
-    def reply_received(self, reply):
-        if self.deferred is not None:
-            d, self.deferred = self.deferred, None
-            d.callback(reply)
+        self.lock = Lock()
 
     def clientConnectionFailed(self, connector, reason):
-        if self.deferred is not None:
-            d, self.deferred = self.deferred, None
-            d.errback(reason + connector.getDestination())
+        self.deferred.errback(reason)
+        self.lock.release()
+
+
+class ListMovieServerProtocol(XmlStream):
+
+    def __init__(self):
+        XmlStream.__init__(self)    # possibly unnecessary
+        self._initializeStream()
+        self.movies = []
+
+    def connectionMade(self):
+        request = Element((None, 'list_movies'))
+        self.send(request)
+
+    def onDocumentStart(self, elementRoot):
+        """ The root tag has been parsed """
+        if elementRoot.name == 'movie_list':
+            self.action = 'movie_list'
+
+    def onElement(self, element):
+        """ Children/Body elements parsed """
+        if element.name == 'movie':
+            id_movie = str(element.attributes['id_movie'])
+            title = str(element.attributes['title'])
+            size = int(element.attributes['size'])
+            self.movies.append(Movie(id_movie, title, size))
+        else:
+            print(element.name)
+
+    def onDocumentEnd(self):
+        """ Parsing has finished, you should send your response now """
+        if self.action == 'movie_list':
+            self.movies.append(
+                Movie('fakeone', "Harry Potter and the Fakey Fake", 35))
+            self.movies.append(
+                Movie('phoney', "Draco Malfoy and the Dark Lord", 42))
+            self.factory.deferred.callback(self.movies)
+            self.factory.lock.release()
+
+
+class ListMovies(ClientFactory):
+
+    protocol = ListMovieServerProtocol
+
+    def __init__(self):
+        self.deferred = Deferred()
+        self.lock = Lock()
+
+    def clientConnectionFailed(self, connector, reason):
+        self.deferred.errback(reason)
+        self.lock.release()
