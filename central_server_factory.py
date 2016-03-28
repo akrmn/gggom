@@ -18,7 +18,6 @@ class ClientProtocol(XmlStream):
     def __init__(self):
         XmlStream.__init__(self)    # possibly unnecessary
         self._initializeStream()
-        self.clients = ClientList()
         # FIXME: dummy movie list, it has to be changed later
         self.movies = MovieList()
         self.movies.add_movie(Movie('fakeone', "Harry Potter and the Fakey Fake", 35), Server('192.168.1.1', 10004))
@@ -26,7 +25,6 @@ class ClientProtocol(XmlStream):
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
-        factory.lock.acquire()
         if elementRoot.name == 'register_client':
             self.action = 'register_client'
             self.host = str(elementRoot.attributes['host'])
@@ -45,7 +43,7 @@ class ClientProtocol(XmlStream):
         """ Parsing has finished, you should send your response now """
         if self.action == 'register_client':
             self.client = Client(self.username, self.host, self.port)
-            result = self.clients.add_client(self.client)
+            result = self.factory.clients.add_client(self.client)
             if result is None:
                 'Client ', self.client.to_string(), 'is already registered.'
                 self.registration_failed('Client already registered')
@@ -82,3 +80,4 @@ class ClientFact(ClientFactory):
     def __init__(self):
         self.deferred = Deferred()
         self.lock = Lock()
+        self.clients = ClientList()

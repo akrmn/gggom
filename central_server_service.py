@@ -16,4 +16,4 @@ class ClientService:
         factory = ClientFact()
 
         self.reactor.callFromThread(
-            self.reactor.listenTCP, self.host, self.port, factory)
+            self.reactor.listenTCP, self.port, factory)

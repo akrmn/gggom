@@ -83,6 +83,9 @@ class Client:
     def to_string(self):
         return self.username + ' ' + self.host + ' ' + str(self.port)
 
+    def is_equal(self, client):
+        return self.username == client.username
+
 class ClientList:
     """ Tiene un diccionario de clientes que tiene key=Client, value=RequestList"""
     def __init__(self):
@@ -90,20 +93,20 @@ class ClientList:
 
     def is_element(self, client):
         for c in self.clients:
-            if c == client: return True
+            if c.is_equal(client): return True
         return False
 
     def add_client(self, client, request=None):
         """Adds a client if it doesn't exist, if it does exist it adds a new request to it.
            Returns None when the client exists and we're not adding a new request to it"""
         if request is not None:
-            if client not in self.clients:
+            if not self.is_element(client):
                 self.clients[client] = RequestList()
             else:
                 self.clients[client].add_request(request)
             return client
         else:
-            if client not in self.clients:
+            if not self.is_element(client):
                 self.clients[client] = RequestList()
                 return client
             else:
