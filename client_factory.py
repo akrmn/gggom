@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""GGGOM Geodistributed Getter Of Movies Protocols and Factories."""
+"""GGGOM Geodistributed Getter Of Movies Client Protocols and Factories."""
 
 from __future__ import print_function
 from twisted.internet.protocol import ClientFactory

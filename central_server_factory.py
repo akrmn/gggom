@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""GGGOM Geodistributed Getter Of Movies Protocols and Factories."""
+"""GGGOM Geodistributed Getter Of Movies CS Protocols and Factories."""
 
 from __future__ import print_function
 from twisted.internet.protocol import ClientFactory, ServerFactory
@@ -20,8 +20,12 @@ class ClientProtocol(XmlStream):
         self._initializeStream()
         # FIXME: dummy movie list, it has to be changed later
         self.movies = MovieList()
-        self.movies.add_movie(Movie('fakeone', "Harry Potter and the Fakey Fake", 35), Server('192.168.1.1', 10004))
-        self.movies.add_movie(Movie('phoney', "Draco Malfoy and the Dark Lord", 35), Server('192.168.1.2', 10006))
+        self.movies.add_movie(Movie('fakeone',
+                                    "Harry Potter and the Fakey Fake", 35),
+                              Server('192.168.1.1', 10004))
+        self.movies.add_movie(Movie('phoney',
+                                    "Draco Malfoy and the Dark Lord", 35),
+                              Server('192.168.1.2', 10006))
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
@@ -45,10 +49,10 @@ class ClientProtocol(XmlStream):
             self.client = Client(self.username, self.host, self.port)
             result = self.factory.clients.add_client(self.client)
             if result is None:
-                print('Client ', self.client.to_string(), 'is already registered.')
+                print('Client ', str(self.client), 'is already registered.')
                 self.registration_failed('Client already registered')
             else:
-                print('Se agregó el nuevo cliente: ', self.client.to_string())
+                print('Se agregó el nuevo cliente: ', self.client)
                 self.registration_ok()
         elif self.action == 'list_movies':
             self.list_movies()
@@ -72,6 +76,7 @@ class ClientProtocol(XmlStream):
         response['reply'] = 'Failed'
         response['reason'] = reason
         self.send(response)
+
 
 class ClientFact(ClientFactory):
 
@@ -113,10 +118,10 @@ class DownloadServerProtocol(XmlStream):
             self.add_movie_list()
             result = self.factory.servers.add_server(self.server)
             if result is not None:
-                print('Server', self.server.to_string(), 'was added to the list')
+                print('Server', str(self.server), 'was added to the list')
                 self.registration_ok()
             else:
-                print('Server', self.server.to_string(), 'is already registered')
+                print('Server', str(self.server), 'is already registered')
                 self.registration_failed('Server already registered')
 
     def registration_ok(self):
@@ -139,6 +144,7 @@ class DownloadServerProtocol(XmlStream):
 
     def print_movie_list(self):
         self.factory.movies.print_movies()
+
 
 class DownloadServerFactory(ServerFactory):
 

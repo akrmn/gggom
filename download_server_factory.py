@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""GGGOM Geodistributed Getter Of Movies Protocols and Factories."""
+"""GGGOM Geodistributed Getter Of Movies DS Protocols and Factories."""
 
 from __future__ import print_function
 from twisted.internet.protocol import ClientFactory
@@ -67,6 +67,7 @@ class ClientFact(ClientFactory):
         self.lock = Lock()
         self.movies = movies
 
+
 class RegisterServerProtocol(XmlStream):
 
     def __init__(self):
@@ -94,6 +95,7 @@ class RegisterServerProtocol(XmlStream):
                 self.factory.deferred.errback(
                     Failure(elementRoot.attributes['reason']))
         self.factory.lock.release()
+
 
 class Register(ClientFactory):
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""GGGOM Geodistributed Getter Of Movies Client."""
+"""GGGOM Geodistributed Getter Of Movies Download Server."""
 
 from __future__ import print_function
 import signal
@@ -28,8 +28,11 @@ class GggomDownloadServerShell(Cmd):
         Cmd.__init__(self)
         self.client_service = client_service
         self.server_service = server_service
-        self.movies.append(Movie('fakeone', "Harry Potter and the Fakey Fake", 35))
-        self.movies.append(Movie('phoney', "Draco Malfoy and the Dark Lord", 35))
+        self.movies.append(Movie('fakeone',
+                                 "Harry Potter and the Fakey Fake", 35))
+        self.movies.append(Movie('phoney',
+                                 "Draco Malfoy and the Dark Lord", 35))
+
         def callback(result):
             print('Registered successfully')
 
@@ -38,7 +41,6 @@ class GggomDownloadServerShell(Cmd):
 
         self.server_service.register(self.movies, callback, errback)
         self.client_service.add_movie_list(self.movies)
-
 
     # ======================================================================= #
     # Commands                                                                #
@@ -119,7 +121,8 @@ def parse_args():
     usage = ("%prog [options] server_ip[:port]...\n\n"
              "This is the download server program.\n"
              "If no port is given for the server, 26 is used.\n"
-             "If no port is given as an option to listen to clients, 16 is used.")
+             "If no port is given as an option to listen to clients, "
+             "16 is used.")
 
     parser = OptionParser(usage)
 
@@ -154,7 +157,8 @@ def main():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     client_service = ClientService(reactor, options.port or 16)
-    server_service = CentralServerService(reactor, server_host, server_port, options.port or 16)
+    server_service = CentralServerService(reactor, server_host, server_port,
+                                          options.port or 16)
     shell = GggomDownloadServerShell(client_service, server_service)
 
     reactor.callInThread(shell.cmdloop)

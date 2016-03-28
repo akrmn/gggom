@@ -1,6 +1,6 @@
 # coding=utf-8
 class Movie:
-
+    """ Stores relevant info about a movie"""
     def __init__(self, id_movie, title, size):
         self.id_movie = id_movie
         self.title = title
@@ -16,26 +16,24 @@ class Movie:
         return self.size
 
     def __str__(self):
-        return "id: " + self.id_movie + ", title: " + self.title + ", size: " + str(self.size)
-
-    def to_string(self):
-        return "id: " + self.id_movie + ", title: " + self.title + ", size: " + str(self.size)
+        return("id: " + self.id_movie + ", title: " + self.title +
+               ", size: " + str(self.size))
 
     def __repr__(self):
-        return "Movie(" + self.id_movie + ", " + self.title + ", " + str(self.size) + ")"
+        return("Movie(" + self.id_movie + ", " + self.title + ", " +
+               str(self.size) + ")")
 
     def to_row(self):
         return [self.id_movie, self.title, self.size]
 
-class MovieList:
-    """ Tiene un diccionario de peliculas que tiene key=movie, value=serverList"""
+
+class MovieDict:
+    """ A dictionary of movies. Type is {Movie, ServerList}"""
     def __init__(self):
         self.movies = {}
 
     def is_element(self, movie):
-        for m in self.movies:
-            if m == movie: return True
-        return False
+        return movie in self.movies
 
     def is_empty(self):
         if self.movies:
@@ -63,15 +61,16 @@ class MovieList:
 
     def print_movies(self):
         for movie in self.movies:
-            print movie.to_string()
-            print 'server:'
+            print(str(movie))
+            print('server:')
             for server in self.get_servers(movie).get_server_list():
-                print server.to_string()
-            print '---------------------'
+                print(str(server))
+            print('---------------------')
 
     def get_download_server_list(self, movie):
-        #Idealmente luego queremos devolver solo un servidor, el ideal
+        # Idealmente luego queremos devolver solo un servidor, el ideal
         return self.get_servers(movie).get_server_list()
+
 
 class Client:
 
@@ -89,25 +88,25 @@ class Client:
     def get_port(self):
         return self.port
 
-    def to_string(self):
+    def __str__(self):
         return self.username + ' ' + self.host + ' ' + str(self.port)
 
     def is_equal(self, client):
         return self.username == client.username
 
-class ClientList:
-    """ Tiene un diccionario de clientes que tiene key=Client, value=RequestList"""
+
+class ClientDict:
+    """ A dictionary of clients. Type is {Client, RequestList}"""
     def __init__(self):
         self.clients = {}
 
     def is_element(self, client):
-        for c in self.clients:
-            if c.is_equal(client): return True
-        return False
+        return client in self.clients
 
     def add_client(self, client, request=None):
-        """Adds a client if it doesn't exist, if it does exist it adds a new request to it.
-           Returns None when the client exists and we're not adding a new request to it"""
+        """Adds a client if it doesn't exist, if it does exist it adds a new
+        request to it. Returns None when the client exists and we're not
+        adding a new request to it"""
         if request is not None:
             if not self.is_element(client):
                 self.clients[client] = RequestList()
@@ -129,19 +128,21 @@ class ClientList:
 
     def print_clients(self):
         for client in self.clients:
-            print client.to_string()
-            print 'request:'
+            print(str(client))
+            print('request:')
             for request in self.get_requests().get_request_list():
-                print request.to_string()
-            print '---------------------'
+                print(request)
+            print('---------------------')
 
     def get_request_list(self, movie):
-        #Idealmente luego queremos devolver solo un servidor, el ideal
+        # Idealmente luego queremos devolver solo un servidor, el ideal
         return self.get_requests().get_request_list()
+
 
 class Server:
 
-    def __init__(self, host, port, clients=[], active_downloads=[], finished_downloads=[], downloaded_movies=[]):
+    def __init__(self, host, port, clients=[], active_downloads=[],
+                 finished_downloads=[], downloaded_movies=[]):
         self.host = host
         self.port = port
         self.clients = clients
@@ -155,7 +156,7 @@ class Server:
     def get_port(self):
         return self.port
 
-    def to_string(self):
+    def __str__(self):
         return '(\'' + self.host + '\', ' + str(self.port) + ')'
 
     def to_server(self):
@@ -183,15 +184,14 @@ class Server:
         if not exists:
             self.downloaded_movies.append((movie, 1))
 
+
 class ServerList:
     """ Tiene una lista de servidores """
     def __init__(self):
         self.servers = []
 
     def is_element(self, server):
-        for s in self.servers:
-            if s.host == server.host and s.port == server.port: return True
-        return False
+        return server in self.servers
 
     def is_empty(self):
         if self.servers:
@@ -223,7 +223,8 @@ class ServerList:
 
     def print_servers(self):
         for server in self.servers:
-            print server.to_string()
+            print(str(server))
+
 
 class Request:
 
@@ -231,8 +232,10 @@ class Request:
         self.movie = movie
         self.server = server
 
-    def to_string(self):
-        return 'request: movie:' + self.movie.to_string() + ', server:' + self.server.to_string()
+    def __str__(self):
+        return('request: movie:' + str(self.movie) + ', server:' +
+               str(self.server))
+
 
 class RequestList:
     """ Tiene una lista de requests """
@@ -240,9 +243,7 @@ class RequestList:
         self.requests = []
 
     def is_element(self, request):
-        for r in self.requests:
-            if r == request: return True
-        return False
+        return request in self.requests
 
     def add_request(self, server):
         self.requests.append(server)
@@ -264,4 +265,4 @@ class RequestList:
 
     def print_requests(self):
         for request in self.requests:
-            print request.to_string()
+            print(str(request))

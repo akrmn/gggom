@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""GGGOM Geodistributed Getter Of Movies Client."""
+"""GGGOM Geodistributed Getter Of Movies Central Server."""
 
 from __future__ import print_function
 import signal
@@ -41,18 +41,23 @@ class GggomCentralServerShell(Cmd):
         else:
             def print_movies_by_server(movies, servers):
                 if not servers.is_empty():
-                    print("%i available server(s):" % len(servers.get_server_list()))
+                    print("%i available server(s):" % len(
+                        servers.get_server_list()))
                     print('')
                     for server in servers.get_server_list():
                         print('server:')
-                        print(server.to_string())
+                        print(str(server))
                         print('movies:')
                         if not movies.is_empty():
                             print(tabulate(
-                                [movie.to_row() for movie in movies.get_movie_dict() if server == movies.get_servers(movie)],
-                                headers=['Id', 'Title', 'Size'], tablefmt="psql"))
+                                [movie.to_row() for movie
+                                 in movies.get_movie_dict()
+                                 if server == movies.get_servers(movie)],
+                                headers=['Id', 'Title', 'Size'],
+                                tablefmt="psql"))
                             print('')
-                        else: print('No movies\n')
+                        else:
+                            print('No movies\n')
                 else:
                     print('There\'s no available servers')
 
@@ -60,7 +65,7 @@ class GggomCentralServerShell(Cmd):
             print_movies_by_server(movies, servers)
 
     def do_downloads_by_server(self, arg):
-        """List the movies requested by servers and how many times they were requested."""
+        """List the movies requested by servers and number of requests."""
         args = arg.split()
         if len(args) != 0:
             _error('`downloads_by_server` doesn\'t expect any arguments.')
@@ -130,10 +135,12 @@ def parse_args():
     parser = OptionParser(usage)
 
     help = "The port to listen on for servers. Default is 26."
-    parser.add_option('--server-port', type='int', help=help, dest="server_port")
+    parser.add_option('--server-port', type='int', help=help,
+                      dest="server_port")
 
     help = "The port to listen on for clients. Default is 40."
-    parser.add_option('--client-port', type='int', help=help, dest="client_port")
+    parser.add_option('--client-port', type='int', help=help,
+                      dest="client_port")
 
     options, args = parser.parse_args()
 

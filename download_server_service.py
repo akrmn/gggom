@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""GGGOM Geodistributed Getter Of Movies Client Service."""
+"""GGGOM Geodistributed Getter Of Movies Download Server Services."""
 
 from __future__ import print_function
 from download_server_factory import ClientFact, Register
@@ -19,6 +19,7 @@ class ClientService:
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, factory)
 
+
 class CentralServerService:
     def __init__(self, reactor, host, port, my_port):
         self.reactor = reactor
@@ -33,4 +34,3 @@ class CentralServerService:
 
         self.reactor.callFromThread(
             self.reactor.connectTCP, self.host, self.port, factory)
-
