@@ -1,17 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """GGGOM Geodistributed Getter Of Movies Client."""
 
 from __future__ import print_function
-import signal
 from cmd import Cmd
 from sys import stdin, stdout, stderr
-from optparse import OptionParser
 from twisted.internet import reactor
 from tabulate import tabulate
 
 from client_service import ClientService
-from movie import Movie, MovieList, Client, Server
+from movie import Movie
 
 
 class GggomClientShell(Cmd):
@@ -141,46 +138,15 @@ def _error(text):
     print("ERROR:", text, file=stderr)
 
 
-def parse_args():
-    usage = ("%prog [options] server_ip[:port]...\n\n"
-             "This is the client program.\n"
-             "If no port is given for the server, 40 is used.")
+class Client:
+    def __init__(self, host, port, options):
+        self.host = host
+        self.port = port
+        self.options = options
+        self.reactor = reactor
+        self.service = ClientService(self.reactor, self.host, self.port)
+        self.shell = GggomClientShell(self.service)
 
-    parser = OptionParser(usage)
-
-    options, args = parser.parse_args()
-
-    if len(args) != 1:
-        parser.error('Provide exactly one server address.')
-
-    def parse_address(arg):
-        if ':' not in arg:
-            host = arg
-            port = '40'
-        else:
-            host, port = arg.split(':', 1)
-
-        if not port.isdigit():
-            parser.error('Ports must be integers.')
-
-        return host, int(port)
-
-    host, port = parse_address(args[0])
-
-    return host, port, options
-
-
-def main():
-    host, port, options = parse_args()
-
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-    service = ClientService(reactor, host, port)
-    shell = GggomClientShell(service)
-
-    reactor.callInThread(shell.cmdloop)
-    reactor.run()
-
-
-if __name__ == '__main__':
-    main()
+    def run(self):
+        self.reactor.callInThread(self.shell.cmdloop)
+        self.reactor.run()

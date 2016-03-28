@@ -2,7 +2,8 @@
 """GGGOM Geodistributed Getter Of Movies CS Protocols and Factories."""
 
 from __future__ import print_function
-from twisted.internet.protocol import ClientFactory, ServerFactory
+from twisted.internet.protocol import ClientFactory as TwistedClientFactory
+from twisted.internet.protocol import ServerFactory
 from twisted.words.xish.xmlstream import XmlStream
 from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element, IElement
@@ -10,7 +11,8 @@ from twisted.python.failure import Failure
 
 from threading import Lock
 
-from movie import Movie, MovieList, Client, ClientList, Server, ServerList
+from movie import Movie, MovieDict
+from server_item import ServerItem, ServerList
 
 
 class ClientProtocol(XmlStream):
@@ -22,10 +24,10 @@ class ClientProtocol(XmlStream):
         self.movies = MovieList()
         self.movies.add_movie(Movie('fakeone',
                                     "Harry Potter and the Fakey Fake", 35),
-                              Server('192.168.1.1', 10004))
+                              ServerItem('192.168.1.1', 10004))
         self.movies.add_movie(Movie('phoney',
                                     "Draco Malfoy and the Dark Lord", 35),
-                              Server('192.168.1.2', 10006))
+                              ServerItem('192.168.1.2', 10006))
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
@@ -78,14 +80,14 @@ class ClientProtocol(XmlStream):
         self.send(response)
 
 
-class ClientFact(ClientFactory):
+class ClientFactory(TwistedClientFactory):
 
     protocol = ClientProtocol
 
     def __init__(self):
         self.deferred = Deferred()
         self.lock = Lock()
-        self.clients = ClientList()
+        # self.clients = ClientList()
 
 
 class DownloadServerProtocol(XmlStream):
@@ -114,7 +116,7 @@ class DownloadServerProtocol(XmlStream):
     def onDocumentEnd(self):
         """ Parsing has finished, you should send your response now """
         if self.action == 'register_download_server':
-            self.server = Server(self.host, self.port)
+            self.server = ServerItem(self.host, self.port)
             self.add_movie_list()
             result = self.factory.servers.add_server(self.server)
             if result is not None:
@@ -152,5 +154,5 @@ class DownloadServerFactory(ServerFactory):
 
     def __init__(self):
         self.init = True
-        self.movies = MovieList()
+        self.movies = MovieDict()
         self.servers = ServerList()

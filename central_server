@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""GGGOM Geodistributed Getter Of Movies Central Server Executable."""
+
+from central_server import CentralServer
+from optparse import OptionParser
+import signal
+
+def parse_args():
+    usage = ("%prog [options]...\n\n"
+             "This is the central server program.\n"
+             "If no port is given for download servers, 26 is used.\n"
+             "If no port is given for clients, 40 is used.")
+
+    parser = OptionParser(usage)
+
+    help = "The port to listen on for servers. Default is 26."
+    parser.add_option('-s', '--server-port', type='int', help=help,
+                      dest="server_port")
+
+    help = "The port to listen on for clients. Default is 40."
+    parser.add_option('-c', '--client-port', type='int', help=help,
+                      dest="client_port")
+
+    options, args = parser.parse_args()
+
+    if len(args) != 0:
+        parser.error("No arguments are expected")
+
+    def parse_port(port):
+        if not port.isdigit():
+            parser.error('Ports must be integers.')
+
+        return int(port)
+
+    if options.client_port is None:
+        client_port = 40
+    else:
+        client_port = parse_port(options.client_port)
+
+    if options.server_port is None:
+        server_port = 26
+    else:
+        server_port = parse_port(options.server_port)
+
+    return (client_port, server_port, options)
+
+if __name__ == '__main__':
+    # signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    client_port, server_port, options = parse_args()
+
+    CentralServer(client_port, server_port, options).run()

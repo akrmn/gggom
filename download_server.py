@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """GGGOM Geodistributed Getter Of Movies Download Server."""
 
@@ -11,36 +10,23 @@ from twisted.internet import reactor
 from tabulate import tabulate
 
 from download_server_service import ClientService, CentralServerService
-from movie import Movie, MovieList, Client, Server
+from movie import Movie
 
 
 class GggomDownloadServerShell(Cmd):
     """GGGOM Download Server Shell."""
 
     intro = (
-        'Welcome to the gggom shell.\n'
+        'Welcome to the gggom Download Server shell.\n'
         'Type help or ? to list commands.\n'
         'To leave, use exit or ^D.\n')
-    prompt = 'gggom> '
+    prompt = 'Gggom$ '
     movies = []
 
     def __init__(self, client_service, server_service):
         Cmd.__init__(self)
         self.client_service = client_service
         self.server_service = server_service
-        self.movies.append(Movie('fakeone',
-                                 "Harry Potter and the Fakey Fake", 35))
-        self.movies.append(Movie('phoney',
-                                 "Draco Malfoy and the Dark Lord", 35))
-
-        def callback(result):
-            print('Registered successfully')
-
-        def errback(reason):
-            _error(reason.getErrorMessage())
-
-        self.server_service.register(self.movies, callback, errback)
-        self.client_service.add_movie_list(self.movies)
 
     # ======================================================================= #
     # Commands                                                                #
@@ -108,62 +94,43 @@ class GggomDownloadServerShell(Cmd):
         reactor.callFromThread(reactor.stop)
         return True
 
-    def _must_register(self):
-        _error("You must `register` before issuing this command.")
-        return
-
 
 def _error(text):
     print("ERROR:", text, file=stderr)
 
 
-def parse_args():
-    usage = ("%prog [options] server_ip[:port]...\n\n"
-             "This is the download server program.\n"
-             "If no port is given for the server, 26 is used.\n"
-             "If no port is given as an option to listen to clients, "
-             "16 is used.")
+class DownloadServer:
+    def __init__(self, host, port, client_port, options):
+        self.host = host
+        self.port = port
+        self.client_port = client_port
+        self.options = options
+        self.reactor = reactor
+        self.client_service = ClientService(self.reactor, client_port)
+        self.server_service = CentralServerService(self.reactor, host, port,
+                                                   client_port)
+        self.shell = GggomDownloadServerShell(self.client_service,
+                                              self.server_service)
 
-    parser = OptionParser(usage)
+        self.movies = []
 
-    help = "The port to listen on. Default is 16."
-    parser.add_option('--port', type='int', help=help)
+    def onStart(self):
+        def callback(result):
+            print('Registered successfully')
+            self.shell.cmdloop()
 
-    options, args = parser.parse_args()
-
-    if len(args) != 1:
-        parser.error('Provide exactly one server address.')
-
-    def parse_address(arg):
-        if ':' not in arg:
-            host = arg
-            port = '26'
-        else:
-            host, port = arg.split(':', 1)
-
-        if not port.isdigit():
-            parser.error('Ports must be integers.')
-
-        return host, int(port)
-
-    host, port = parse_address(args[0])
-
-    return host, port, options
+        def errback(reason):
+            _error(reason.getErrorMessage())
+            reactor.callFromThread(self.reactor.stop)
 
 
-def main():
-    server_host, server_port, options = parse_args()
+        self.movies.append(Movie('fakeone',
+                                 "Harry Potter and the Fakey Fake", 35))
+        self.movies.append(Movie('phoney',
+                                 "Draco Malfoy and the Dark Lord", 35))
 
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
+        self.server_service.register(self.movies, callback, errback)
 
-    client_service = ClientService(reactor, options.port or 16)
-    server_service = CentralServerService(reactor, server_host, server_port,
-                                          options.port or 16)
-    shell = GggomDownloadServerShell(client_service, server_service)
-
-    reactor.callInThread(shell.cmdloop)
-    reactor.run()
-
-
-if __name__ == '__main__':
-    main()
+    def run(self):
+        reactor.callInThread(self.onStart)
+        reactor.run()

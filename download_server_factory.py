@@ -2,7 +2,7 @@
 """GGGOM Geodistributed Getter Of Movies DS Protocols and Factories."""
 
 from __future__ import print_function
-from twisted.internet.protocol import ClientFactory
+from twisted.internet.protocol import ClientFactory as TwistedClientFactory
 from twisted.words.xish.xmlstream import XmlStream
 from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element, IElement
@@ -10,7 +10,7 @@ from twisted.python.failure import Failure
 
 from threading import Lock
 
-from movie import Movie, MovieList, Client, ClientList, Server
+from movie import Movie
 
 
 class ClientProtocol(XmlStream):
@@ -58,7 +58,7 @@ class ClientProtocol(XmlStream):
         print('Nueva conexión desde', self.transport.getPeer())
 
 
-class ClientFact(ClientFactory):
+class ClientFactory(TwistedClientFactory):
 
     protocol = ClientProtocol
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """GGGOM Geodistributed Getter Of Movies Central Server."""
 
@@ -11,17 +10,17 @@ from twisted.internet import reactor
 from tabulate import tabulate
 
 from central_server_service import ClientService, DownloadServerService
-from movie import Movie, MovieList, Client, Server
+from movie import Movie
 
 
 class GggomCentralServerShell(Cmd):
     """GGGOM Central Server Shell."""
 
     intro = (
-        'Welcome to the gggom shell.\n'
+        'Welcome to the gggom Central Server shell.\n'
         'Type help or ? to list commands.\n'
         'To leave, use exit or ^D.\n')
-    prompt = 'gggom> '
+    prompt = 'GGGOM# '
 
     def __init__(self, client_service, server_service):
         Cmd.__init__(self)
@@ -117,62 +116,23 @@ class GggomCentralServerShell(Cmd):
         reactor.callFromThread(reactor.stop)
         return True
 
-    def _must_register(self):
-        _error("You must `register` before issuing this command.")
-        return
-
 
 def _error(text):
     print("ERROR:", text, file=stderr)
 
 
-def parse_args():
-    usage = ("%prog [options]...\n\n"
-             "This is the central server program.\n"
-             "If no port is given for the server, 26 is used.\n"
-             "If no port is given for the client, 40 is used.")
+class CentralServer:
+    def __init__(self, client_port, download_port, options):
+        self.client_port = client_port
+        self.download_port = download_port
+        self.options = options
+        self.reactor = reactor
+        self.client_service = ClientService(self.reactor, self.client_port)
+        self.download_service = DownloadServerService(self.reactor,
+                                                      self.download_port)
+        self.shell = GggomCentralServerShell(self.client_service,
+                                             self.download_service)
 
-    parser = OptionParser(usage)
-
-    help = "The port to listen on for servers. Default is 26."
-    parser.add_option('--server-port', type='int', help=help,
-                      dest="server_port")
-
-    help = "The port to listen on for clients. Default is 40."
-    parser.add_option('--client-port', type='int', help=help,
-                      dest="client_port")
-
-    options, args = parser.parse_args()
-
-    if len(args) != 0:
-        parser.error("No arguments are expected")
-
-    def parse_port(port):
-        if not port.isdigit():
-            parser.error('Ports must be integers.')
-
-        return int(port)
-
-    if (options.client_port is not None):
-        client_port = parse_port(options.client_port)
-    if (options.server_port is not None):
-        server_port = parse_port(options.server_port)
-
-    return options
-
-
-def main():
-    options = parse_args()
-
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-    client_service = ClientService(reactor, options.client_port or 40)
-    server_service = DownloadServerService(reactor, options.server_port or 26)
-    shell = GggomCentralServerShell(client_service, server_service)
-
-    reactor.callInThread(shell.cmdloop)
-    reactor.run()
-
-
-if __name__ == '__main__':
-    main()
+    def run(self):
+        reactor.callInThread(self.shell.cmdloop)
+        reactor.run()

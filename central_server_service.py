@@ -2,7 +2,7 @@
 """GGGOM Geodistributed Getter Of Movies Central Server Services."""
 
 from __future__ import print_function
-from central_server_factory import ClientFact, DownloadServerFactory
+from central_server_factory import ClientFactory, DownloadServerFactory
 
 
 class ClientService:
@@ -12,7 +12,7 @@ class ClientService:
         self.start_listening()
 
     def start_listening(self):
-        factory = ClientFact()
+        factory = ClientFactory()
 
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, factory)

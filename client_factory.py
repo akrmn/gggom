@@ -10,7 +10,7 @@ from twisted.python.failure import Failure
 
 from threading import Lock
 
-from movie import Movie, MovieList, Client, Server
+from movie import Movie
 
 
 class RegisterServerProtocol(XmlStream):
