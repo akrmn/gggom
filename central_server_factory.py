@@ -21,14 +21,6 @@ class ClientProtocol(XmlStream):
     def __init__(self):
         XmlStream.__init__(self)    # possibly unnecessary
         self._initializeStream()
-        # FIXME: dummy movie list, it has to be changed later
-        self.movies = MovieDict()
-        self.movies.add_movie(Movie('fakeone',
-                                    "Harry Potter and the Fakey Fake", 35),
-                              ServerItem('192.168.1.1', 10004))
-        self.movies.add_movie(Movie('phoney',
-                                    "Draco Malfoy and the Dark Lord", 35),
-                              ServerItem('192.168.1.2', 10006))
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
