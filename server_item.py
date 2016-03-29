@@ -21,23 +21,24 @@ class ServerItem:
     def to_server(self):
         return (str(self.host), self.port)
 
-    def add_download(self, client, movie):
-        self.active_downloads.append((client, movie))
+    def add_download(self, request):
+        print('I\'m adding request:', str(request), 'to server:', str(self))
+        self.active_downloads.append(request)
         exists = False
         for c in self.clients:
-            if client == c[0]:
+            if request.client.username == c[0].username:
                 c[1] += 1
                 exists = True
         if not exists:
-            self.clients.append((client, 1))
+            self.clients.append((request.client, 1))
 
-    def finished_download(self, client, movie):
-        if (client, movie) in self.active_downloads:
-            self.active_downloads.remove((client, movie))
-            self.finished_downloads.append((client, movie))
+    def finished_download(self, request):
+        if request in self.active_downloads:
+            self.active_downloads.remove(request)
+            self.finished_downloads.append(request)
         exists = False
         for m in self.downloaded_movies:
-            if movie in m[0]:
+            if movie.username == m[0].username:
                 m[1] += 1
                 exists = True
         if not exists:
