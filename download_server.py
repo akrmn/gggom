@@ -106,26 +106,28 @@ class DownloadServer:
                                                    client_port)
         self.shell = GggomDownloadServerShell(self.client_service,
                                               self.server_service)
-
         self.movies = []
+        self.spinner = common.Spinner()
 
     def onStart(self):
         def callback(result):
-            print('Registered successfully')
+            self.spinner.stop()
             self.shell.cmdloop()
 
         def errback(reason):
+            self.spinner.stop()
             common.error(reason.getErrorMessage())
             reactor.callFromThread(self.reactor.stop)
-
 
         self.movies.append(Movie('fakeone',
                                  "Harry Potter and the Fakey Fake", 35))
         self.movies.append(Movie('phoney',
                                  "Draco Malfoy and the Dark Lord", 35))
 
+        self.spinner.start("Registering at %s:%i" % (self.host, self.port))
+
         self.server_service.register(self.movies, callback, errback)
 
     def run(self):
-        reactor.callInThread(self.onStart)
-        reactor.run()
+        self.reactor.callInThread(self.onStart)
+        self.reactor.run()

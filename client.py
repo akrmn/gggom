@@ -19,11 +19,10 @@ class GggomClientShell(Cmd):
         'Type help or ? to list commands.\n'
         'To leave, use exit or ^D.\n')
     prompt = 'gggom> '
-    username = None
 
-    def __init__(self, service):
+    def __init__(self, client):
         Cmd.__init__(self)
-        self.service = service
+        self.client = client
 
     # ======================================================================= #
     # Commands                                                                #
@@ -39,13 +38,16 @@ class GggomClientShell(Cmd):
             username = args[0]
 
             def callback(result):
+                self.client.spinner.stop()
                 print('Registered successfully')
-                self.username = username
+                self.client.username = username
 
             def errback(reason):
+                self.client.spinner.stop()
                 common.error(reason.getErrorMessage())
 
-            self.service.register(username, callback, errback)
+            self.client.spinner.start("Registering")
+            self.client.service.register(username, callback, errback)
 
     def do_list_movies(self, arg):
         """Fetch the list of available movies from the Central Server."""
@@ -65,11 +67,11 @@ class GggomClientShell(Cmd):
             def errback(reason):
                 common.error(reason.getErrorMessage())
 
-            self.service.list_movies(callback, errback)
+            self.client.service.list_movies(callback, errback)
 
     def do_download(self, arg):
         """Begin downloading the specified movie."""
-        if self.username is None:
+        if self.client.username is None:
             return self._must_register()
 
         args = arg.split()
@@ -82,7 +84,7 @@ class GggomClientShell(Cmd):
 
     def do_status(self, arg):
         """Show the status of the specified movie."""
-        if self.username is None:
+        if self.client.username is None:
             return self._must_register()
 
         args = arg.split()
@@ -141,7 +143,9 @@ class Client:
         self.options = options
         self.reactor = reactor
         self.service = ClientService(self.reactor, self.host, self.port)
-        self.shell = GggomClientShell(self.service)
+        self.shell = GggomClientShell(self)
+        self.spinner = common.Spinner()
+        self.username = None
 
     def run(self):
         self.reactor.callInThread(self.shell.cmdloop)

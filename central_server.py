@@ -130,5 +130,5 @@ class CentralServer:
                                              self.download_service)
 
     def run(self):
-        reactor.callInThread(self.shell.cmdloop)
-        reactor.run()
+        self.reactor.callInThread(self.shell.cmdloop)
+        self.reactor.run()

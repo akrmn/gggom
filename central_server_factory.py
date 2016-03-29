@@ -13,6 +13,7 @@ from threading import Lock
 
 from movie import Movie, MovieDict
 from server_item import ServerItem, ServerList
+from client_item import ClientItem, ClientDict
 
 
 class ClientProtocol(XmlStream):
@@ -21,7 +22,7 @@ class ClientProtocol(XmlStream):
         XmlStream.__init__(self)    # possibly unnecessary
         self._initializeStream()
         # FIXME: dummy movie list, it has to be changed later
-        self.movies = MovieList()
+        self.movies = MovieDict()
         self.movies.add_movie(Movie('fakeone',
                                     "Harry Potter and the Fakey Fake", 35),
                               ServerItem('192.168.1.1', 10004))
@@ -48,7 +49,7 @@ class ClientProtocol(XmlStream):
     def onDocumentEnd(self):
         """ Parsing has finished, you should send your response now """
         if self.action == 'register_client':
-            self.client = Client(self.username, self.host, self.port)
+            self.client = ClientItem(self.username, self.host, self.port)
             result = self.factory.clients.add_client(self.client)
             if result is None:
                 print('Client ', str(self.client), 'is already registered.')
@@ -87,7 +88,7 @@ class ClientFactory(TwistedClientFactory):
     def __init__(self):
         self.deferred = Deferred()
         self.lock = Lock()
-        # self.clients = ClientList()
+        self.clients = ClientDict()
 
 
 class DownloadServerProtocol(XmlStream):
