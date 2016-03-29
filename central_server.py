@@ -7,6 +7,12 @@ from twisted.internet import reactor
 from tabulate import tabulate
 
 from central_server_service import ClientService, DownloadServerService
+
+from client_item import ClientDict
+from movie import MovieDict
+from request import RequestList
+from server_item import ServerList
+
 import common
 
 
@@ -169,9 +175,14 @@ class CentralServer:
         self.download_port = download_port
         self.options = options
         self.reactor = reactor
-        self.client_service = ClientService(self.reactor, self.client_port)
-        self.download_service = DownloadServerService(self.reactor,
-                                                      self.download_port)
+        self.clients = ClientDict()
+        self.movies = MovieDict()
+        self.servers = ServerList()
+        self.requests = RequestList()
+        self.client_service = ClientService(self.reactor, self.client_port,
+                                            self.clients, self.movies, self.servers, self.requests)
+        self.download_service = DownloadServerService(self.reactor, self.download_port,
+                                                      self.clients, self.movies, self.servers, self.requests)
         self.shell = GggomCentralServerShell(self.client_service,
                                              self.download_service)
 

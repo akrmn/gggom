@@ -56,6 +56,12 @@ class MovieDict:
                 print(str(server))
             print('---------------------')
 
+    def get_movies(self):
+        movies = []
+        for movie in self.movies:
+            movies.append(movie)
+        return list(set(movies))
+
     def get_download_server_list(self, movie):
         # Idealmente luego queremos devolver solo un servidor, el ideal
         return self.get_servers(movie).get_server_list()

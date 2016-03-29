@@ -10,10 +10,9 @@ from twisted.words.xish.domish import Element
 
 from threading import Lock
 
-from movie import Movie, MovieDict
-from server_item import ServerItem, ServerList
-from client_item import ClientItem, ClientDict
-from request import RequestList
+from movie import Movie
+from server_item import ServerItem
+from client_item import ClientItem
 
 
 class ClientProtocol(XmlStream):
@@ -21,14 +20,6 @@ class ClientProtocol(XmlStream):
     def __init__(self):
         XmlStream.__init__(self)    # possibly unnecessary
         self._initializeStream()
-        # FIXME: dummy movie list, it has to be changed later
-        self.movies = MovieDict()
-        self.movies.add_movie(Movie('fakeone',
-                                    "Harry Potter and the Fakey Fake", 35),
-                              ServerItem('192.168.1.1', 10004))
-        self.movies.add_movie(Movie('phoney',
-                                    "Draco Malfoy and the Dark Lord", 35),
-                              ServerItem('192.168.1.2', 10006))
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
@@ -62,7 +53,7 @@ class ClientProtocol(XmlStream):
 
     def list_movies(self):
         request = Element((None, 'movie_list'))
-        for movie in self.factory.movies.movies:
+        for movie in self.factory.movies.get_movies():
             m = request.addElement('movie')
             m['id_movie'] = movie.id_movie
             m['title'] = movie.title
@@ -85,22 +76,13 @@ class ClientFactory(TwistedClientFactory):
 
     protocol = ClientProtocol
 
-    def __init__(self):
+    def __init__(self, clients, movies, servers, requests):
         self.deferred = Deferred()
         self.lock = Lock()
-        self.clients = ClientDict()
-
-        self.movies = MovieDict()
-        self.requests = RequestList()
-        # This movie list is saved on the download server factory, it should
-        # maybe even be saved in the Cmd, I don't know how to access that from
-        # here. This is a temporal fix
-        self.movies.add_movie(Movie('fakeone',
-                                    "Harry Potter and the Fakey Fake", 35),
-                              None)
-        self.movies.add_movie(Movie('phoney',
-                                    "Draco Malfoy and the Dark Lord", 35),
-                              None)
+        self.clients = clients
+        self.movies = movies
+        self.servers = servers
+        self.requests = requests
 
 
 class DownloadServerProtocol(XmlStream):
@@ -164,7 +146,9 @@ class DownloadServerFactory(ServerFactory):
 
     protocol = DownloadServerProtocol
 
-    def __init__(self):
+    def __init__(self, clients, movies, servers, requests):
         self.init = True
-        self.movies = MovieDict()
-        self.servers = ServerList()
+        self.clients = clients
+        self.movies = movies
+        self.servers = servers
+        self.requests = requests
