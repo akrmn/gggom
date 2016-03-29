@@ -7,14 +7,17 @@ from threading import Thread, RLock, Condition
 def error(text):
     print("ERROR:", text, file=stderr)
 
-class Spinner(Thread):
-    def __init__(self, speed=0.1):
+class _Spinner(Thread):
+    def __init__(self, message):
         Thread.__init__(self)
         self.rlock = RLock()
         self.cv = Condition()
         self.__chars = u"⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-        self.__message = ""
-        self.__message_length = 0
+        if len(message) > 0:
+            self.__message = " " + message
+        else:
+            self.__message = ""
+        self.__message_length = len(self.__message)
 
     def __clear(self):
         stdout.write(
@@ -26,13 +29,8 @@ class Spinner(Thread):
     def __call__(self):
         self.start()
 
-    def start(self, message=""):
+    def start(self):
         self.stopFlag = 0
-        if len(message) > 0:
-            self.__message = " " + message
-        else:
-            self.__message = ""
-        self.__message_length = len(self.__message)
         Thread.start(self)
 
     def stop(self):
@@ -68,3 +66,15 @@ class Spinner(Thread):
                 stdout.write('\b')
                 stdout.write(char)
                 stdout.flush()
+
+class Spinner():
+    def __init__(self):
+        self.__current = None
+
+    def start(self, message = ""):
+        self.__current = _Spinner(message)
+        self.__current.start()
+
+    def stop(self):
+        if self.__current is not None:
+            self.__current.stop()
