@@ -54,7 +54,7 @@ class GggomCentralServerShell(Cmd):
                         print(tabulate(
                             [movie.to_row() for movie
                              in movies.movies
-                             if server == movies.get_servers(movie)],
+                             if server in movies.get_servers(movie).servers],
                             headers=['Id', 'Title', 'Size'],
                             tablefmt="psql"))
                         print('')
