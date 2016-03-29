@@ -40,7 +40,8 @@ class GggomCentralServerShell(Cmd):
             common.error('`movies_by_server` doesn\'t expect any arguments.')
 
         else:
-            movies, servers = self.server_service.movies_by_server()
+            movies, servers = \
+                self.central_server.download_service.movies_by_server()
             if not servers.is_empty():
                 print("%i available server(s):" % len(
                     servers.servers))
@@ -69,8 +70,8 @@ class GggomCentralServerShell(Cmd):
             common.error('`downloads_by_server` doesn\'t'
                          'expect any arguments.')
         else:
-            servers = self.server_service.get_servers()
-            requests = self.client_service.get_requests()
+            servers = self.central_server.download_service.get_servers()
+            requests = self.central_server.client_service.get_requests()
 
             if not servers.is_empty():
                 print("%i server(s):" % len(
@@ -100,8 +101,8 @@ class GggomCentralServerShell(Cmd):
         if len(args) != 0:
             common.error('`clients_by_server` doesn\'t expect any arguments.')
         else:
-            servers = self.server_service.get_servers()
-            requests = self.client_service.get_requests()
+            servers = self.central_server.download_service.get_servers()
+            requests = self.central_server.client_service.get_requests()
 
             if not servers.is_empty():
                 print("%i server(s):" % len(

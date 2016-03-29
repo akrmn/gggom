@@ -79,10 +79,10 @@ class GggomDownloadServerShell(Cmd):
                         for (client, downloads)
                         in self.download_server.loyal_clients.items()]
 
-                rows.sort(key = lambda x: [-x[3], x[0]])
+                rows.sort(key = lambda x: [-x[2], x[0]])
 
-                print(tabulate(rows, headers=['Client username', 'host',
-                                              'Downloads'],
+                print(tabulate(rows,
+                               headers=['Client username','host','Downloads'],
                                tablefmt="psql"))
             else:
                 print("No clients have downloaded movies yet")
