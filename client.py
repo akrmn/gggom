@@ -58,6 +58,7 @@ class GggomClientShell(Cmd):
 
         else:
             def callback(result):
+                self.client.spinner.stop()
                 print("%i available movie(s):" % len(result))
 
                 print(tabulate(
@@ -65,8 +66,10 @@ class GggomClientShell(Cmd):
                     headers=['Id', 'Title', 'Size'], tablefmt="psql"))
 
             def errback(reason):
+                self.client.spinner.stop()
                 common.error(reason.getErrorMessage())
 
+            self.client.spinner.start("Fetching movies")
             self.client.service.list_movies(callback, errback)
 
     def do_download(self, arg):

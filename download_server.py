@@ -10,6 +10,7 @@ from tabulate import tabulate
 
 from download_server_service import ClientService, CentralServerService
 from movie import Movie
+from client_item import ClientItem
 import common
 
 
@@ -21,25 +22,31 @@ class GggomDownloadServerShell(Cmd):
         'Type help or ? to list commands.\n'
         'To leave, use exit or ^D.\n')
     prompt = 'Gggom$ '
-    movies = []
 
-    def __init__(self, client_service, server_service):
+    def __init__(self, download_server):
         Cmd.__init__(self)
-        self.client_service = client_service
-        self.server_service = server_service
+        self.download_server = download_server
 
     # ======================================================================= #
     # Commands                                                                #
     # ======================================================================= #
-    def do_view_downloads(self, arg):
+    def do_current_downloads(self, arg):
         """List the current downloads."""
         args = arg.split()
 
         if len(args) != 0:
-            common.error('`view_downloads` doesn\'t expect any arguments.')
-
+            common.error('`current_downloads` doesn\'t expect any arguments.')
         else:
-            print('9 downloads: (...)')
+            if self.download_server.current_downloads:
+                print("Current downloads:")
+
+                rows = [[movie.title, transfers] for (movie, transfers)
+                        in self.download_server.current_downloads.items()]
+
+                print(tabulate(rows, headers=['Movie', 'Ongoing downloads'],
+                               tablefmt="psql"))
+            else:
+                print("No movies are being downloaded")
 
     def do_downloaded_movies(self, arg):
         """List what movies have been downloaded and how many times."""
@@ -47,16 +54,38 @@ class GggomDownloadServerShell(Cmd):
         if len(args) != 0:
             common.error('`downloaded_movies` doesn\'t expect any arguments.')
         else:
-            print('fakemovie downloads: 15')
+            if self.download_server.finished_downloads:
+                print("Downloaded movies:")
 
-    def do_list_clients(self, arg):
+                rows = [[movie.title, downloads] for (movie, downloads)
+                        in self.download_server.finished_downloads.items()]
+
+                print(tabulate(rows, headers=['Movie', 'Finished downloads'],
+                               tablefmt="psql"))
+            else:
+                print("No movies have been downloaded")
+
+    def do_loyal_clients(self, arg):
         """List the clients that download movies from the server."""
 
         args = arg.split()
         if len(args) != 0:
-            common.error('`list_clients` doesn\'t expect any arguments.')
+            common.error('`loyal_clients` doesn\'t expect any arguments.')
         else:
-            print('client 1: best_client, 192.168.2.1')
+            if self.download_server.loyal_clients:
+                print("Loyal clients:")
+
+                rows = [[client.username, client.host, downloads]
+                        for (client, downloads)
+                        in self.download_server.loyal_clients.items()]
+
+                rows.sort(key = lambda x: [-x[2], x[0]])
+
+                print(tabulate(rows,
+                               headers=['Client username','host','Downloads'],
+                               tablefmt="psql"))
+            else:
+                print("No clients have downloaded movies yet")
 
     def do_exit(self, arg):
         """Stop downloads and exit."""
@@ -101,13 +130,38 @@ class DownloadServer:
         self.client_port = client_port
         self.options = options
         self.reactor = reactor
+        self.movies = []
+        self.current_downloads = {}
+        self.finished_downloads = {}
+        self.loyal_clients = {}
         self.client_service = ClientService(self.reactor, client_port)
         self.server_service = CentralServerService(self.reactor, host, port,
                                                    client_port)
-        self.shell = GggomDownloadServerShell(self.client_service,
-                                              self.server_service)
-        self.movies = []
+        self.shell = GggomDownloadServerShell(self)
         self.spinner = common.Spinner()
+
+    def load_movies(self):
+        # FIXME: This should ALL be loaded from an XML file
+        fakeone = Movie('fakeone', "Harry Potter and the Fakey Fake", 35)
+        phoney = Movie('phoney', "Draco Malfoy and the Dark Lord", 42)
+
+        self.movies.append(fakeone)
+        self.movies.append(phoney)
+
+        self.finished_downloads[fakeone] = 5
+        self.finished_downloads[phoney] = 3
+
+        gaby = ClientItem("gaby", "192.168.0.5", "5412")
+        gustavo_e = ClientItem("gustavo_e", "192.168.0.8", "5712")
+        gustavo_g = ClientItem("gustavo_g", "192.168.0.10", "5852")
+        oscar = ClientItem("oscar", "192.168.0.55", "5440")
+        moises = ClientItem("moises", "192.168.0.140", "4522")
+
+        self.loyal_clients[gaby] = 7
+        self.loyal_clients[gustavo_e] = 5
+        self.loyal_clients[gustavo_g] = 6
+        self.loyal_clients[oscar] = 2
+        self.loyal_clients[moises] = 6
 
     def onStart(self):
         def callback(result):
@@ -119,10 +173,7 @@ class DownloadServer:
             common.error(reason.getErrorMessage())
             reactor.callFromThread(self.reactor.stop)
 
-        self.movies.append(Movie('fakeone',
-                                 "Harry Potter and the Fakey Fake", 35))
-        self.movies.append(Movie('phoney',
-                                 "Draco Malfoy and the Dark Lord", 35))
+        self.load_movies()
 
         self.spinner.start("Registering at %s:%i" % (self.host, self.port))
 

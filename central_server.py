@@ -25,10 +25,9 @@ class GggomCentralServerShell(Cmd):
         'To leave, use exit or ^D.\n')
     prompt = 'GGGOM# '
 
-    def __init__(self, client_service, server_service):
+    def __init__(self, central_server):
         Cmd.__init__(self)
-        self.client_service = client_service
-        self.server_service = server_service
+        self.central_server = central_server
 
     # ======================================================================= #
     # Commands                                                                #
@@ -41,30 +40,28 @@ class GggomCentralServerShell(Cmd):
             common.error('`movies_by_server` doesn\'t expect any arguments.')
 
         else:
-            def print_movies_by_server(movies, servers):
-                if not servers.is_empty():
-                    print("%i available server(s):" % len(
-                        servers.servers))
-                    print('')
-                    for server in servers.servers:
-                        print('server:')
-                        print(str(server))
-                        print('movies:')
-                        if not movies.is_empty():
-                            print(tabulate(
-                                [movie.to_row() for movie
-                                 in movies.movies
-                                 if server == movies.get_servers(movie)],
-                                headers=['Id', 'Title', 'Size'],
-                                tablefmt="psql"))
-                            print('')
-                        else:
-                            print('No movies\n')
-                else:
-                    print('There\'s no available servers')
-
-            movies, servers = self.server_service.movies_by_server()
-            print_movies_by_server(movies, servers)
+            movies, servers = \
+                self.central_server.download_service.movies_by_server()
+            if not servers.is_empty():
+                print("%i available server(s):" % len(
+                    servers.servers))
+                print('')
+                for server in servers.servers:
+                    print('server:')
+                    print(str(server))
+                    print('movies:')
+                    if not movies.is_empty():
+                        print(tabulate(
+                            [movie.to_row() for movie
+                             in movies.movies
+                             if server == movies.get_servers(movie)],
+                            headers=['Id', 'Title', 'Size'],
+                            tablefmt="psql"))
+                        print('')
+                    else:
+                        print('No movies\n')
+            else:
+                print('There\'s no available servers')
 
     def do_downloads_by_server(self, arg):
         """List the movies requested by servers and number of requests."""
@@ -73,31 +70,29 @@ class GggomCentralServerShell(Cmd):
             common.error('`downloads_by_server` doesn\'t'
                          'expect any arguments.')
         else:
-            def print_downloads_by_server(servers, downloads):
-                if not servers.is_empty():
-                    print("%i server(s):" % len(
-                        servers.servers))
-                    print('')
-                    for server in servers.servers:
-                        print('server:')
-                        print(str(server))
-                        print('downloads:')
-                        if not requests.is_empty():
-                            print(tabulate(
-                                [requests.to_row() for request
-                                 in requests.requests
-                                 if server == request.server],
-                                headers=['Movie', 'Server', 'Client'],
-                                tablefmt="psql"))
-                            print('')
-                        else:
-                            print('No downloads\n')
-                else:
-                    print('There\'s no available servers')
+            servers = self.central_server.download_service.get_servers()
+            requests = self.central_server.client_service.get_requests()
 
-            servers = self.server_service.get_servers()
-            requests = self.client_service.get_requests()
-            print_downloads_by_server(servers, requests)
+            if not servers.is_empty():
+                print("%i server(s):" % len(
+                    servers.servers))
+                print('')
+                for server in servers.servers:
+                    print('server:')
+                    print(str(server))
+                    print('downloads:')
+                    if not requests.is_empty():
+                        print(tabulate(
+                            [requests.to_row() for request
+                             in requests.requests
+                             if server == request.server],
+                            headers=['Movie', 'Server', 'Client'],
+                            tablefmt="psql"))
+                        print('')
+                    else:
+                        print('No downloads\n')
+            else:
+                print('There\'s no available servers')
 
     def do_clients_by_server(self, arg):
         """List the clients handled by each server"""
@@ -106,31 +101,29 @@ class GggomCentralServerShell(Cmd):
         if len(args) != 0:
             common.error('`clients_by_server` doesn\'t expect any arguments.')
         else:
-            def print_clients_by_server(servers, downloads):
-                if not servers.is_empty():
-                    print("%i server(s):" % len(
-                        servers.servers))
-                    print('')
-                    for server in servers.servers:
-                        print('server:')
-                        print(str(server))
-                        print('downloads:')
-                        if not requests.is_empty():
-                            print(tabulate(
-                                [requests.client for request
-                                 in requests.requests
-                                 if server == request.server],
-                                headers=['Client'],
-                                tablefmt="psql"))
-                            print('')
-                        else:
-                            print('No clients\n')
-                else:
-                    print('There\'s no available servers')
+            servers = self.central_server.download_service.get_servers()
+            requests = self.central_server.client_service.get_requests()
 
-            servers = self.server_service.get_servers()
-            requests = self.client_service.get_requests()
-            print_clients_by_server(servers, requests,)
+            if not servers.is_empty():
+                print("%i server(s):" % len(
+                    servers.servers))
+                print('')
+                for server in servers.servers:
+                    print('server:')
+                    print(str(server))
+                    print('downloads:')
+                    if not requests.is_empty():
+                        print(tabulate(
+                            [requests.client for request
+                             in requests.requests
+                             if server == request.server],
+                            headers=['Client'],
+                            tablefmt="psql"))
+                        print('')
+                    else:
+                        print('No clients\n')
+            else:
+                print('There\'s no available servers')
 
     def do_exit(self, arg):
         """Stop downloads and exit."""
@@ -180,11 +173,15 @@ class CentralServer:
         self.servers = ServerList()
         self.requests = RequestList()
         self.client_service = ClientService(self.reactor, self.client_port,
-                                            self.clients, self.movies, self.servers, self.requests)
-        self.download_service = DownloadServerService(self.reactor, self.download_port,
-                                                      self.clients, self.movies, self.servers, self.requests)
-        self.shell = GggomCentralServerShell(self.client_service,
-                                             self.download_service)
+                                            self.clients, self.movies,
+                                            self.servers, self.requests)
+        self.download_service = DownloadServerService(self.reactor,
+                                                      self.download_port,
+                                                      self.clients,
+                                                      self.movies,
+                                                      self.servers,
+                                                      self.requests)
+        self.shell = GggomCentralServerShell(self)
 
     def run(self):
         self.reactor.callInThread(self.shell.cmdloop)
