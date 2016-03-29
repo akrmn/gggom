@@ -35,7 +35,7 @@ class GggomClientShell(Cmd):
             common.error("`register` takes a single argument")
 
         else:
-            username = args[0]
+            self.client.username = args[0]
 
             def callback(result):
                 self.client.spinner.stop()
@@ -47,7 +47,7 @@ class GggomClientShell(Cmd):
                 common.error(reason.getErrorMessage())
 
             self.client.spinner.start("Registering")
-            self.client.service.register(username, callback, errback)
+            self.client.service.register(self.client.username, callback, errback)
 
     def do_list_movies(self, arg):
         """Fetch the list of available movies from the Central Server."""
@@ -81,9 +81,14 @@ class GggomClientShell(Cmd):
         if len(args) == 0:
             common.error('`download` expects one argument.')
         else:  # I think it could work for many movies at the same time
-            for movie in args:
-                print('Downloading %s' % movie)
-                print('/stub/')
+            movie = args[0]
+            def callback(result):
+                print('Download movie from:', result)
+
+            def errback(reason):
+                common.error(reason.getErrorMessage())
+
+            self.client.service.download(self.client.username, movie, callback, errback)
 
     def do_status(self, arg):
         """Show the status of the specified movie."""

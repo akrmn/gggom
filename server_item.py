@@ -72,11 +72,10 @@ class ServerList:
         return None
 
     def get_server(self, server):
-        return self.servers.g
-        # for s in self.servers:
-        #     if s == server:
-        #         return s
-        # return None
+        for s in self.servers:
+            if s == server:
+                return s
+        return None
 
     def print_servers(self):
         for server in self.servers:

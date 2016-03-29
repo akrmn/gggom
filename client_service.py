@@ -2,7 +2,7 @@
 """GGGOM Geodistributed Getter Of Movies Client Service."""
 
 from __future__ import print_function
-from client_factory import Register, ListMovies
+from client_factory import Register, ListMovies, DownloadMovie
 
 
 class ClientService:
@@ -30,3 +30,10 @@ class ClientService:
             self.reactor.connectTCP, self.host, self.port, factory)
 
         factory.lock.acquire()
+
+    def download(self, username, movie, callback, errback):
+        factory = DownloadMovie(username, movie)
+        factory.deferred.addCallbacks(callback, errback)
+
+        self.reactor.callFromThread(
+            self.reactor.connectTCP, self.host, self.port, factory)

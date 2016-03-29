@@ -21,6 +21,12 @@ class Movie:
         return("Movie(" + self.id_movie + ", " + self.title + ", " +
                str(self.size) + ")")
 
+    def __eq__(self, other):
+        return self.id_movie == other.id_movie
+
+    def __hash__(self):
+        return hash((self.id_movie))
+
 
 class MovieDict:
     """ A dictionary of movies. Type is {Movie, ServerList}"""
@@ -35,13 +41,15 @@ class MovieDict:
 
     def add_movie(self, movie, server):
         if not self.is_element(movie):
-            self.movies[movie] = ServerList().add_server(server)
+            servers = ServerList()
+            servers.add_server(server)
+            self.movies[movie] = servers
         else:
             self.movies[movie].add_server(server)
 
     def get_movie(self, id_movie):
         for movie in self.movies:
-            if movie.get_id() == id_movie:
+            if movie.id_movie == id_movie:
                 return movie
         return None
 
@@ -58,4 +66,4 @@ class MovieDict:
 
     def get_download_server_list(self, movie):
         # Idealmente luego queremos devolver solo un servidor, el ideal
-        return self.get_servers(movie).get_server_list()
+        return self.movies[movie].servers
