@@ -41,16 +41,16 @@ class GggomCentralServerShell(Cmd):
             def print_movies_by_server(movies, servers):
                 if not servers.is_empty():
                     print("%i available server(s):" % len(
-                        servers.get_server_list()))
+                        servers.servers))
                     print('')
-                    for server in servers.get_server_list():
+                    for server in servers.servers:
                         print('server:')
                         print(str(server))
                         print('movies:')
                         if not movies.is_empty():
                             print(tabulate(
                                 [movie.to_row() for movie
-                                 in movies.get_movie_dict()
+                                 in movies.movies
                                  if server == movies.get_servers(movie)],
                                 headers=['Id', 'Title', 'Size'],
                                 tablefmt="psql"))

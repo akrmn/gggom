@@ -1,6 +1,7 @@
 # coding=utf-8
 from server_item import ServerList
 
+
 class Movie:
     """ Stores relevant info about a movie"""
     def __init__(self, id_movie, title, size):
@@ -29,7 +30,7 @@ class MovieDict:
         return movie in self.movies
 
     def is_empty(self):
-        bool(self.movies)
+        return not bool(self.movies)
 
     def add_movie(self, movie, server):
         if not self.is_element(movie):
