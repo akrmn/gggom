@@ -13,6 +13,7 @@ from threading import Lock
 from movie import Movie, MovieDict
 from server_item import ServerItem, ServerList
 from client_item import ClientItem, ClientDict
+from request import RequestList
 
 
 class ClientProtocol(XmlStream):
@@ -89,6 +90,7 @@ class ClientFactory(TwistedClientFactory):
         self.lock = Lock()
         self.clients = ClientDict()
         self.movies = MovieDict()
+        self.requests = RequestList()
         # This movie list is saved on the download server factory, it should
         # maybe even be saved in the Cmd, I don't know how to access that from
         # here. This is a temporal fix

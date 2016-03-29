@@ -12,10 +12,13 @@ class ClientService:
         self.start_listening()
 
     def start_listening(self):
-        factory = ClientFactory()
+        self.factory = ClientFactory()
 
         self.reactor.callFromThread(
-            self.reactor.listenTCP, self.port, factory)
+            self.reactor.listenTCP, self.port, self.factory)
+
+    def get_requests(self):
+        return self.factory.requests
 
 
 class DownloadServerService:
@@ -32,3 +35,6 @@ class DownloadServerService:
 
     def movies_by_server(self):
         return self.factory.movies, self.factory.servers
+
+    def get_servers(self):
+        return self.factory.servers

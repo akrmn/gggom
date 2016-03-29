@@ -1,12 +1,16 @@
 class Request:
 
-    def __init__(self, movie, server):
+    def __init__(self, movie, server, client):
         self.movie = movie
         self.server = server
+        self.client = client
 
     def __str__(self):
-        return('request: movie:' + str(self.movie) + ', server:' +
-               str(self.server))
+        return('request: movie: ' + str(self.movie) + ', server: ' +
+               str(self.server) + ', client: ' + str(self.client))
+
+    def to_row(self):
+        return [self.movie, self.server, self.client]
 
 
 class RequestList:
@@ -17,14 +21,11 @@ class RequestList:
     def is_element(self, request):
         return request in self.requests
 
-    def add_request(self, server):
-        self.requests.append(server)
+    def is_empty(self):
+        return not bool(self.requests)
 
-    def get_client(self, username):
-        for client in self.clients:
-            if client.get_username() == username:
-                return client
-        return None
+    def add_request(self, request):
+        self.requests.append(request)
 
     def get_request(self, request):
         for r in self.requests:

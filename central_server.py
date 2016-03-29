@@ -2,14 +2,11 @@
 """GGGOM Geodistributed Getter Of Movies Central Server."""
 
 from __future__ import print_function
-import signal
 from cmd import Cmd
-from optparse import OptionParser
 from twisted.internet import reactor
 from tabulate import tabulate
 
 from central_server_service import ClientService, DownloadServerService
-from movie import Movie
 import common
 
 
@@ -67,9 +64,34 @@ class GggomCentralServerShell(Cmd):
         """List the movies requested by servers and number of requests."""
         args = arg.split()
         if len(args) != 0:
-            common.error('`downloads_by_server` doesn\'t expect any arguments.')
+            common.error('`downloads_by_server` doesn\'t'
+                         'expect any arguments.')
         else:
-            print('server 1: fakemovie requested 23 times')
+            def print_downloads_by_server(servers, downloads):
+                if not servers.is_empty():
+                    print("%i server(s):" % len(
+                        servers.servers))
+                    print('')
+                    for server in servers.servers:
+                        print('server:')
+                        print(str(server))
+                        print('downloads:')
+                        if not requests.is_empty():
+                            print(tabulate(
+                                [requests.to_row() for request
+                                 in requests.requests
+                                 if server == request.server],
+                                headers=['Movie', 'Server', 'Client'],
+                                tablefmt="psql"))
+                            print('')
+                        else:
+                            print('No downloads\n')
+                else:
+                    print('There\'s no available servers')
+
+            servers = self.server_service.get_servers()
+            requests = self.client_service.get_requests()
+            print_downloads_by_server(servers, requests)
 
     def do_clients_by_server(self, arg):
         """List the clients handled by each server"""
@@ -78,7 +100,31 @@ class GggomCentralServerShell(Cmd):
         if len(args) != 0:
             common.error('`clients_by_server` doesn\'t expect any arguments.')
         else:
-            print('server 1: 6 clients')
+            def print_clients_by_server(servers, downloads):
+                if not servers.is_empty():
+                    print("%i server(s):" % len(
+                        servers.servers))
+                    print('')
+                    for server in servers.servers:
+                        print('server:')
+                        print(str(server))
+                        print('downloads:')
+                        if not requests.is_empty():
+                            print(tabulate(
+                                [requests.client for request
+                                 in requests.requests
+                                 if server == request.server],
+                                headers=['Client'],
+                                tablefmt="psql"))
+                            print('')
+                        else:
+                            print('No clients\n')
+                else:
+                    print('There\'s no available servers')
+
+            servers = self.server_service.get_servers()
+            requests = self.client_service.get_requests()
+            print_clients_by_server(servers, requests,)
 
     def do_exit(self, arg):
         """Stop downloads and exit."""

@@ -12,6 +12,12 @@ class ServerItem:
     def __str__(self):
         return '(\'' + self.host + '\', ' + str(self.port) + ')'
 
+    def __eq__(self, other):
+        return self.host == other.host and self.port == other.port
+
+    def __hash__(self):
+        return ((self.host, self.port))
+
     def to_server(self):
         return (str(self.host), self.port)
 
