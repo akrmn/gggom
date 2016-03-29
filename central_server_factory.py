@@ -13,6 +13,7 @@ from threading import Lock
 from movie import Movie
 from server_item import ServerItem
 from client_item import ClientItem
+from request import Request
 
 
 class ClientProtocol(XmlStream):
@@ -29,6 +30,8 @@ class ClientProtocol(XmlStream):
             self.port = int(elementRoot.attributes['port'])
         elif elementRoot.name == 'list_movies':
             self.action = 'list_movies'
+        elif elementRoot.name == 'request_movie':
+            self.action = 'request_movie'
 
     def onElement(self, element):
         """ Children/Body elements parsed """
@@ -50,10 +53,28 @@ class ClientProtocol(XmlStream):
                 self.registration_ok()
         elif self.action == 'list_movies':
             self.list_movies()
+        elif self.action == 'request_movie':
+            self.choose_download_server(self.id_movie)
+
+    def choose_download_server(self, movie):
+        mov = self.factory.movies.get_movie(movie)
+        download_servers = self.factory.movies.get_download_server_list(mov)
+        # Ahorita solo elegimos el primero de la lista, idealmente queremos el
+        # que sea el mejor, no el primero
+        download_server = download_servers[0]
+        request = Element((None, 'download_from'))
+        s = request.addElement('server')
+        s['host'] = download_server.host
+        s['port'] = str(download_server.port)
+        client = self.factory.clients.get_client(self.username)
+        self.factory.clients.add_client(client, Request(mov, download_server, client))
+        s = self.factory.servers.get_server(download_server)
+        s.add_download(client, mov)
+        self.send(request)
 
     def list_movies(self):
         request = Element((None, 'movie_list'))
-        for movie in self.factory.movies.get_movies():
+        for movie in self.factory.movies.movies:
             m = request.addElement('movie')
             m['id_movie'] = movie.id_movie
             m['title'] = movie.title

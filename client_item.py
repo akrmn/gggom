@@ -43,6 +43,12 @@ class ClientDict:
             else:
                 return None
 
+    def get_client(self, username):
+        for client in self.clients:
+            if client.username == username:
+                return client
+        return None
+
     def get_client_dict(self):
         return self.clients
 
