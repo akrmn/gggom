@@ -89,6 +89,7 @@ class ClientFactory(TwistedClientFactory):
         self.deferred = Deferred()
         self.lock = Lock()
         self.clients = ClientDict()
+
         self.movies = MovieDict()
         self.requests = RequestList()
         # This movie list is saved on the download server factory, it should
