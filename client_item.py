@@ -1,3 +1,6 @@
+from request import RequestList
+
+
 class ClientItem:
 
     def __init__(self, username, host, port):
@@ -11,9 +14,12 @@ class ClientItem:
     def __eq__(self, other):
         return self.username == other.username
 
+    def __hash__(self):
+        return hash((self.username))
+
 
 class ClientDict:
-    """ A dictionary of clients. Type is {ClientItem, RequestList}"""
+    """ A dictionary of clients. Type is {ClientItem, }"""
     def __init__(self):
         self.clients = {}
 

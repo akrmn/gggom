@@ -6,8 +6,7 @@ from twisted.internet.protocol import ClientFactory as TwistedClientFactory
 from twisted.internet.protocol import ServerFactory
 from twisted.words.xish.xmlstream import XmlStream
 from twisted.internet.defer import Deferred
-from twisted.words.xish.domish import Element, IElement
-from twisted.python.failure import Failure
+from twisted.words.xish.domish import Element
 
 from threading import Lock
 
@@ -62,11 +61,11 @@ class ClientProtocol(XmlStream):
 
     def list_movies(self):
         request = Element((None, 'movie_list'))
-        for movie in self.factory.movies.get_movie_dict():
+        for movie in self.factory.movies.movies:
             m = request.addElement('movie')
-            m['id_movie'] = movie.get_id()
-            m['title'] = movie.get_title()
-            m['size'] = str(movie.get_size())
+            m['id_movie'] = movie.id_movie
+            m['title'] = movie.title
+            m['size'] = str(movie.size)
         self.send(request)
 
     def registration_ok(self):
@@ -90,6 +89,17 @@ class ClientFactory(TwistedClientFactory):
         self.lock = Lock()
         self.clients = ClientDict()
 
+        self.movies = MovieDict()
+        # This movie list is saved on the download server factory, it should
+        # maybe even be saved in the Cmd, I don't know how to access that from
+        # here. This is a temporal fix
+        self.movies.add_movie(Movie('fakeone',
+                                    "Harry Potter and the Fakey Fake", 35),
+                              None)
+        self.movies.add_movie(Movie('phoney',
+                                    "Draco Malfoy and the Dark Lord", 35),
+                              None)
+
 
 class DownloadServerProtocol(XmlStream):
 
@@ -111,7 +121,6 @@ class DownloadServerProtocol(XmlStream):
             id_movie = str(element.attributes['id_movie'])
             title = str(element.attributes['title'])
             size = int(element.attributes['size'])
-            m = Movie(id_movie, title, size)
             self.movie_list.append(Movie(id_movie, title, size))
 
     def onDocumentEnd(self):

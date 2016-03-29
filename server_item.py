@@ -47,7 +47,7 @@ class ServerList:
         return server in self.servers
 
     def is_empty(self):
-        return bool(self.servers)
+        return not bool(self.servers)
 
     def add_server(self, server):
         if not self.is_element(server):

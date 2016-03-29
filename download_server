@@ -40,7 +40,7 @@ def parse_args():
     if options.client_port is None:
         client_port = 16
     else:
-        client_port = parse_port(options.client_port)
+        client_port = int(options.client_port)
 
     return host, port, client_port, options
 
