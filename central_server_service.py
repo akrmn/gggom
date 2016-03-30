@@ -22,6 +22,15 @@ class ClientService:
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, self.factory)
 
+    def get_clients(self):
+        return self.factory.clients
+
+    def get_movies(self):
+        return self.factory.movies
+
+    def get_servers(self):
+        return self.factory.servers
+
     def get_requests(self):
         return self.factory.requests
 
@@ -43,8 +52,17 @@ class DownloadServerService:
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, self.factory)
 
-    def movies_by_server(self):
-        return self.movies, self.servers
+    def get_clients(self):
+        return self.factory.clients
+
+    def get_movies(self):
+        return self.factory.movies
 
     def get_servers(self):
-        return self.servers
+        return self.factory.servers
+
+    def get_requests(self):
+        return self.factory.requests
+
+    def movies_by_server(self):
+        return self.movies, self.servers

@@ -54,7 +54,7 @@ class GggomCentralServerShell(Cmd):
                         print(tabulate(
                             [movie.to_row() for movie
                              in movies.movies
-                             if server == movies.get_servers(movie)],
+                             if server in movies.get_servers(movie).servers],
                             headers=['Id', 'Title', 'Size'],
                             tablefmt="psql"))
                         print('')
@@ -71,25 +71,28 @@ class GggomCentralServerShell(Cmd):
                          'expect any arguments.')
         else:
             servers = self.central_server.download_service.get_servers()
-            requests = self.central_server.client_service.get_requests()
+            clients = self.central_server.client_service.get_clients()
 
             if not servers.is_empty():
                 print("%i server(s):" % len(
                     servers.servers))
                 print('')
+                # We want to do this with tabulate and using the list in the
+                # ServerItem class, right now when I add a movie it's adding it
+                # for all servers I have no idea why, until we fix that this
+                # code gets us the right information.
                 for server in servers.servers:
                     print('server:')
                     print(str(server))
                     print('downloads:')
-                    if not requests.is_empty():
-                        print(tabulate(
-                            [requests.to_row() for request
-                             in requests.requests
-                             if server == request.server],
-                            headers=['Movie', 'Server', 'Client'],
-                            tablefmt="psql"))
+                    empty = True
+                    for client in clients.clients:
+                        for req in clients.clients[client].requests:
+                            if req.server == server:
+                                print(req)
+                                empty = False
                         print('')
-                    else:
+                    if empty:
                         print('No downloads\n')
             else:
                 print('There\'s no available servers')

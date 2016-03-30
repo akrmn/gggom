@@ -70,9 +70,15 @@ class ClientProtocol(XmlStream):
         s['host'] = download_server.host
         s['port'] = str(download_server.port)
         client = self.factory.clients.get_client(self.username)
-        self.factory.clients.add_client(client, Request(mov, download_server, client))
-        s = self.factory.servers.get_server(download_server)
-        s.add_download(client, mov)
+        req = Request(mov, download_server, client)
+        self.factory.clients.add_client(client, req)
+        server = self.factory.servers.get_server(download_server)
+        server.add_download(req)
+        for s in self.factory.servers.servers:
+            print(s)
+            print('req:')
+            for r in s.active_downloads:
+                print(r)
         self.send(request)
 
     def list_movies(self):
