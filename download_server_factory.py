@@ -8,6 +8,8 @@ from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element, IElement
 from twisted.python.failure import Failure
 
+import xml.etree.cElementTree as ET
+
 from threading import Lock
 
 from movie import Movie
@@ -78,6 +80,7 @@ class RegisterServerProtocol(XmlStream):
         request = Element((None, 'register_download_server'))
         request['host'] = self.transport.getHost().host
         request['port'] = str(self.factory.port)
+        self.register_movies_xml()
         for movie in self.factory.movies:
             m = request.addElement('movie')
             m['id_movie'] = movie.id_movie
@@ -95,6 +98,16 @@ class RegisterServerProtocol(XmlStream):
                 self.factory.deferred.errback(
                     Failure(elementRoot.attributes['reason']))
         self.factory.lock.release()
+
+    def register_movies_xml(self):
+    	tree = ET.parse('ds_metadata.xml')
+        root = tree.getroot()
+        movies = root.find('movies')
+        for movie in self.factory.movies:
+        	ET.SubElement(
+            	movies, "movie",
+            	id=str(movie.id_movie), size=str(movie.size)).text = movie.title
+        tree.write("ds_metadata.xml")
 
 
 class Register(ClientFactory):

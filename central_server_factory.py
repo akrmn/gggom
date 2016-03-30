@@ -10,6 +10,8 @@ from twisted.words.xish.domish import Element
 
 from threading import Lock
 
+import xml.etree.cElementTree as ET
+
 from movie import Movie
 from server_item import ServerItem
 from client_item import ClientItem
@@ -50,6 +52,7 @@ class ClientProtocol(XmlStream):
                 self.registration_failed('Client already registered')
             else:
                 print('Se agregó el nuevo cliente: ', self.client)
+                self.register_client_xml()
                 self.registration_ok()
         elif self.action == 'list_movies':
             self.list_movies()
@@ -98,6 +101,14 @@ class ClientProtocol(XmlStream):
         response['reason'] = reason
         self.send(response)
 
+    def register_client_xml(self):
+        tree = ET.parse('cs_metadata.xml')
+        root = tree.getroot()
+        clients = root.find('clients')
+        ET.SubElement(
+            clients, "client", username=self.username, host=str(self.host), port=str(self.port))
+        tree.write("cs_metadata.xml")
+
 
 class ClientFactory(TwistedClientFactory):
 
@@ -139,6 +150,7 @@ class DownloadServerProtocol(XmlStream):
             result = self.factory.central_server.servers.add_server(self.server)
             if result is not None:
                 print('Server', str(self.server), 'was added to the list')
+                self.register_server_xml()
                 self.registration_ok()
             else:
                 print('Server', str(self.server), 'is already registered')
@@ -164,6 +176,18 @@ class DownloadServerProtocol(XmlStream):
 
     def print_movie_list(self):
         self.factory.central_server.movies.print_movies()
+
+    def register_server_xml(self):
+        tree = ET.parse('cs_metadata.xml')
+        root = tree.getroot()
+        servers = root.find('servers')
+        server = ET.SubElement(
+            servers, "download_server", host=str(self.host), port=str(self.port))
+        for movie in self.movie_list:
+            ET.SubElement(
+                server, "movie",
+                id=str(movie.id_movie), size=str(movie.size)).text = movie.title
+        tree.write("cs_metadata.xml")
 
 
 class DownloadServerFactory(ServerFactory):
