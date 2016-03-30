@@ -80,7 +80,6 @@ class RegisterServerProtocol(XmlStream):
         request = Element((None, 'register_download_server'))
         request['host'] = self.transport.getHost().host
         request['port'] = str(self.factory.port)
-        self.register_movies_xml()
         for movie in self.factory.movies:
             m = request.addElement('movie')
             m['id_movie'] = movie.id_movie

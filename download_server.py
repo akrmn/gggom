@@ -8,6 +8,8 @@ from optparse import OptionParser
 from twisted.internet import reactor
 from tabulate import tabulate
 
+import xml.etree.cElementTree as ET
+
 from download_server_service import ClientService, CentralServerService
 from movie import Movie
 from client_item import ClientItem
@@ -142,14 +144,15 @@ class DownloadServer:
 
     def load_movies(self):
         # FIXME: This should ALL be loaded from an XML file
-        fakeone = Movie('fakeone', "Harry Potter and the Fakey Fake", 35)
-        phoney = Movie('phoney', "Draco Malfoy and the Dark Lord", 42)
-
-        self.movies.append(fakeone)
-        self.movies.append(phoney)
-
-        self.finished_downloads[fakeone] = 5
-        self.finished_downloads[phoney] = 3
+        tree = ET.parse('ds_metadata.xml')
+        root = tree.getroot()
+        my_movies = root.find('movies')
+        n = 1
+        for movie in my_movies:
+        	new_movie = Movie(movie.attrib['id'],movie.text,int(movie.attrib['size']))
+        	self.finished_downloads[new_movie] = n
+        	self.movies.append(new_movie)
+        	n+=1
 
         gaby = ClientItem("gaby", "192.168.0.5", "5412")
         gustavo_e = ClientItem("gustavo_e", "192.168.0.8", "5712")
