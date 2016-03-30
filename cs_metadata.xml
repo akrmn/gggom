@@ -1,1 +1,1 @@
-<central_server><servers><download_server host="127.0.0.1" port="16"><movie id="fakeone" size="35">Harry Potter and the Fakey Fake</movie><movie id="phoney" size="42">Draco Malfoy and the Dark Lord</movie></download_server></servers><clients /></central_server>
+<central_server><servers /><clients /></central_server>
