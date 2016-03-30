@@ -1,13 +1,12 @@
 class ServerItem:
 
-    def __init__(self, host, port, clients=[], active_downloads=[],
-                 finished_downloads=[], downloaded_movies=[]):
+    def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.clients = clients
-        self.active_downloads = active_downloads
-        self.finished_downloads = finished_downloads
-        self.downloaded_movies = downloaded_movies
+        self.clients = []
+        self.active_downloads = []
+        self.finished_downloads = []
+        self.downloaded_movies = []
 
     def __str__(self):
         return '(\'' + self.host + '\', ' + str(self.port) + ')'
@@ -38,11 +37,11 @@ class ServerItem:
             self.finished_downloads.append(request)
         exists = False
         for m in self.downloaded_movies:
-            if movie.username == m[0].username:
+            if request.movie.username == m[0].username:
                 m[1] += 1
                 exists = True
         if not exists:
-            self.downloaded_movies.append((movie, 1))
+            self.downloaded_movies.append((request.movie, 1))
 
 
 class ServerList:

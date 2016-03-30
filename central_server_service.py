@@ -6,63 +6,53 @@ from central_server_factory import ClientFactory, DownloadServerFactory
 
 
 class ClientService:
-    def __init__(self, reactor, port, clients, movies, servers, requests):
-        self.reactor = reactor
-        self.port = int(port)
-        self.clients = clients
-        self.movies = movies
-        self.servers = servers
-        self.requests = requests
+    def __init__(self, central_server):
+        self.central_server = central_server
         self.start_listening()
 
     def start_listening(self):
-        self.factory = ClientFactory(self.clients, self.movies,
-                                     self.servers, self.requests)
+        self.factory = ClientFactory(self.central_server)
 
-        self.reactor.callFromThread(
-            self.reactor.listenTCP, self.port, self.factory)
+        self.central_server.reactor.callFromThread(
+            self.central_server.reactor.listenTCP,
+            self.central_server.client_port, self.factory)
 
     def get_clients(self):
-        return self.factory.clients
+        return self.central_server.clients
 
     def get_movies(self):
-        return self.factory.movies
+        return self.central_server.movies
 
     def get_servers(self):
-        return self.factory.servers
+        return self.central_server.servers
 
     def get_requests(self):
-        return self.factory.requests
+        return self.central_server.requests
 
 
 class DownloadServerService:
-    def __init__(self, reactor, port, clients, movies, servers, requests):
-        self.reactor = reactor
-        self.port = int(port)
-        self.clients = clients
-        self.movies = movies
-        self.servers = servers
-        self.requests = requests
+    def __init__(self, central_server):
+        self.central_server = central_server
         self.start_listening()
 
     def start_listening(self):
-        self.factory = DownloadServerFactory(self.clients, self.movies,
-                                             self.servers, self.requests)
+        self.factory = DownloadServerFactory(self.central_server)
 
-        self.reactor.callFromThread(
-            self.reactor.listenTCP, self.port, self.factory)
+        self.central_server.reactor.callFromThread(
+            self.central_server.reactor.listenTCP,
+            self.central_server.download_port, self.factory)
 
     def get_clients(self):
-        return self.factory.clients
+        return self.central_server.clients
 
     def get_movies(self):
-        return self.factory.movies
+        return self.central_server.movies
 
     def get_servers(self):
-        return self.factory.servers
+        return self.central_server.servers
 
     def get_requests(self):
-        return self.factory.requests
+        return self.central_server.requests
 
     def movies_by_server(self):
-        return self.movies, self.servers
+        return self.central_server.movies, self.central_server.servers

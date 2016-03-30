@@ -44,7 +44,7 @@ class ClientProtocol(XmlStream):
         """ Parsing has finished, you should send your response now """
         if self.action == 'register_client':
             self.client = ClientItem(self.username, self.host, self.port)
-            result = self.factory.clients.add_client(self.client)
+            result = self.factory.central_server.clients.add_client(self.client)
             if result is None:
                 print('Client ', str(self.client), 'is already registered.')
                 self.registration_failed('Client already registered')
@@ -57,22 +57,22 @@ class ClientProtocol(XmlStream):
             self.choose_download_server(self.id_movie)
 
     def choose_download_server(self, movie):
-        mov = self.factory.movies.get_movie(movie)
-        download_servers = self.factory.movies.get_download_server_list(mov)
+        mov = self.factory.central_server.movies.get_movie(movie)
         # Ahorita solo elegimos el primero de la lista, idealmente queremos el
         # que sea el mejor, no el primero
-        download_server = download_servers[0]
+        download_server = self.factory.central_server.movies.get_first_download_server(mov)
         request = Element((None, 'download_from'))
         s = request.addElement('server')
         s['host'] = download_server.host
         s['port'] = str(download_server.port)
-        client = self.factory.clients.get_client(self.username)
+        client = self.factory.central_server.clients.get_client(self.username)
         req = Request(mov, download_server, client)
-        self.factory.clients.add_client(client, req)
-        server = self.factory.servers.get_server(download_server)
+        self.factory.central_server.clients.add_client(client, req)
+        server = self.factory.central_server.servers.get_server(download_server)
         server.add_download(req)
-        for s in self.factory.servers.servers:
-            print(s)
+        self.factory.central_server.requests.add_request(req)
+        for s in self.factory.central_server.servers.servers:
+            print(id(s))
             print('req:')
             for r in s.active_downloads:
                 print(r)
@@ -80,7 +80,7 @@ class ClientProtocol(XmlStream):
 
     def list_movies(self):
         request = Element((None, 'movie_list'))
-        for movie in self.factory.movies.movies:
+        for movie in self.factory.central_server.movies.movies:
             m = request.addElement('movie')
             m['id_movie'] = movie.id_movie
             m['title'] = movie.title
@@ -103,13 +103,10 @@ class ClientFactory(TwistedClientFactory):
 
     protocol = ClientProtocol
 
-    def __init__(self, clients, movies, servers, requests):
+    def __init__(self, central_server):
         self.deferred = Deferred()
         self.lock = Lock()
-        self.clients = clients
-        self.movies = movies
-        self.servers = servers
-        self.requests = requests
+        self.central_server = central_server
 
 
 class DownloadServerProtocol(XmlStream):
@@ -139,7 +136,7 @@ class DownloadServerProtocol(XmlStream):
         if self.action == 'register_download_server':
             self.server = ServerItem(self.host, self.port)
             self.add_movie_list()
-            result = self.factory.servers.add_server(self.server)
+            result = self.factory.central_server.servers.add_server(self.server)
             if result is not None:
                 print('Server', str(self.server), 'was added to the list')
                 self.registration_ok()
@@ -160,22 +157,19 @@ class DownloadServerProtocol(XmlStream):
 
     def add_movie_list(self):
         for movie in self.movie_list:
-            self.factory.movies.add_movie(movie, self.server)
+            self.factory.central_server.movies.add_movie(movie, self.server)
 
     def closeConnection(self):
         self.transport.loseConnection()
 
     def print_movie_list(self):
-        self.factory.movies.print_movies()
+        self.factory.central_server.movies.print_movies()
 
 
 class DownloadServerFactory(ServerFactory):
 
     protocol = DownloadServerProtocol
 
-    def __init__(self, clients, movies, servers, requests):
+    def __init__(self, central_server):
         self.init = True
-        self.clients = clients
-        self.movies = movies
-        self.servers = servers
-        self.requests = requests
+        self.central_server = central_server

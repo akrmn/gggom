@@ -10,7 +10,7 @@ class Request:
                str(self.server) + ', client: ' + str(self.client))
 
     def to_row(self):
-        return [self.movie, self.server, self.client]
+        return [self.movie.id_movie, self.client.username]
 
 
 class RequestList:
@@ -32,6 +32,13 @@ class RequestList:
             if r == request:
                 return r
         return None
+
+    def get_requests_from_server(self, server):
+        reqs = []
+        for r in self.requests:
+            if server == r.server:
+                reqs.append(r)
+        return reqs
 
     def print_requests(self):
         for request in self.requests:

@@ -71,7 +71,7 @@ class GggomCentralServerShell(Cmd):
                          'expect any arguments.')
         else:
             servers = self.central_server.download_service.get_servers()
-            clients = self.central_server.client_service.get_clients()
+            requests = self.central_server.client_service.get_requests()
 
             if not servers.is_empty():
                 print("%i server(s):" % len(
@@ -85,14 +85,15 @@ class GggomCentralServerShell(Cmd):
                     print('server:')
                     print(str(server))
                     print('downloads:')
-                    empty = True
-                    for client in clients.clients:
-                        for req in clients.clients[client].requests:
-                            if req.server == server:
-                                print(req)
-                                empty = False
+                    server_requests = requests.get_requests_from_server(server)
+                    if server_requests:
+                        print(tabulate(
+                            [request.to_row() for request
+                             in server_requests],
+                            headers=['Movie', 'Client'],
+                            tablefmt="psql"))
                         print('')
-                    if empty:
+                    else:
                         print('No downloads\n')
             else:
                 print('There\'s no available servers')
@@ -175,15 +176,8 @@ class CentralServer:
         self.movies = MovieDict()
         self.servers = ServerList()
         self.requests = RequestList()
-        self.client_service = ClientService(self.reactor, self.client_port,
-                                            self.clients, self.movies,
-                                            self.servers, self.requests)
-        self.download_service = DownloadServerService(self.reactor,
-                                                      self.download_port,
-                                                      self.clients,
-                                                      self.movies,
-                                                      self.servers,
-                                                      self.requests)
+        self.client_service = ClientService(self)
+        self.download_service = DownloadServerService(self)
         self.shell = GggomCentralServerShell(self)
 
     def run(self):
