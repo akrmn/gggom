@@ -1,0 +1,186 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\setlength\parindent{0pt}
+\setlength{\parskip}{\baselineskip}%
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\usepackage{color}
+\usepackage{graphicx}
+
+\begin{document}
+
+\begin{figure}[t]
+    \begin{center}
+    	\includegraphics[scale=0.75]{logoUSB}\\[0.1cm]
+    	\textsc{Universidad Simón Bolívar}\\[0.7cm]
+        { \LARGE \bfseries GGGOM}\\[0.4cm]
+        { \LARGE \bfseries Geodistributed Getter Of Movies}\\[0.3cm]
+        \textsc{Gustavo El Khoury - 10-10226}\\[0.1cm]
+        \textsc{Gabriela Limonta - 10-10385}\\[0.1cm]
+        \textsc{Moisés Ackerman - 11-10005}\\[0.1cm]
+        \textsc{Gustavo Gutiérrez - 11-10428}\\[0.1cm]
+        \textsc{Oscar Guillen - 11-11264}\\[0.1cm]
+    \end{center}
+\end{figure}
+\clearpage
+
+\section*{Introducción}
+
+\textbf{GGGOM} (\emph{Geodistributed Getter Of Movies}) es una aplicación de tipo cliente/servidor que involucra tres actores:
+\begin{itemize}
+	\item \textbf{SC} - Un servidor central de registro de usuarios y control de descargas.
+	\item \textbf{SD} - Varios servidores de descarga que atienden a los clientes.
+	\item \textbf{CL} - Clientes que solicitan películas.
+\end{itemize}
+
+La intención de este trabajo es explicar las decisiones de diseño que se tomaron a la hora de implementar este trabajo (definición del protocolo,
+herramientas a utilizar) así como a describir brevemente la estructura del código implementado.
+\clearpage
+\section*{Definición del protocolo}
+
+Se especificarán los protocolos de comunicación entre cada uno de los actores.
+
+\subsection*{Mensajes entre SC y SD}
+\begin{enumerate}
+\item El servidor de descarga se registra en el servidor central.\\[0.4cm]
+    \includegraphics[scale=0.5]{DS_Registration}\\[0.4cm]
+    Lenguaje de mensajes a utilizar:
+    \begin{itemize}
+        \item Register\_download\_server:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Host:    \emph{Direccion del servidor de descarga.}
+            \item Port:    \emph{Puerto de escucha del servidor de descarga.}
+            \item Movie:    \emph{Una o varias películas que contiene el servidor.}
+            \begin{itemize}
+                \item id\_movie:    \emph{Id de la película.}
+                \item title:    \emph{Título de la película.}
+                \item size:    \emph{Tamaño de la película.}
+            \end{itemize}
+        \end{itemize}
+        \item Registration\_reply:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Reply:    \emph{Respuesta del servidor. Puede ser \textbf{Ok} o \textbf{Failed}.}
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+\clearpage
+\subsection*{Mensajes entre SC y CL}
+\begin{enumerate}
+    \item El cliente se registra en el servidor central.\\[0.4cm]
+    \includegraphics[scale=0.5]{CL_Registration}\\[0.4cm]
+    Lenguaje de mensajes a utilizar:
+    \begin{itemize}
+        \item Register\_client:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Host:    \emph{Direccion del cliente.}
+            \item Port:    \emph{Puerto de conexión del cliente.}
+            \item Username:    \emph{Usuario con el cual se va a registrar. No puede estar repetido.}
+        \end{itemize}
+        \item Registration\_reply:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Reply:    \emph{Respuesta del servidor. Puede ser \textbf{Ok} o \textbf{Failed}.}
+        \end{itemize}
+    \end{itemize}
+
+    \item El cliente le pide la lista de películas disponibles al servidor central. Debe estar previamente registrado.\\[0.4cm]
+    \includegraphics[scale=0.5]{CL_list_movies}\\[0.4cm]
+    Lenguaje de mensajes a utilizar:
+    \begin{itemize}
+        \item List\_movies:    \emph{Header del mensaje. No contiene elementos.}
+        \item Movie\_list:    \emph{Header del mensaje. Contiene una lista de películas con el siguiente formato:}
+        \begin{itemize}
+            \item id\_movie:    \emph{Id de la película.}
+            \item title:    \emph{Título de la película.}
+            \item size:    \emph{Tamaño de la película.}
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+
+\subsection*{Mensajes que involucran a los tres actores.}
+
+\begin{enumerate}
+    \item El cliente le pide una película al servidor central. Luego descarga la película del servidor de descarga adecuado.\\[0.4cm]
+    \includegraphics[scale=0.5]{Download}\\[0.4cm]
+    Lenguaje de mensajes a utilizar:
+    \begin{itemize}
+        \item Get\_movie:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Username:    \emph{Usuario con el se va a descargar la película. Debe estar registrado.}
+            \item Id\_movie:    \emph{Película que se desea descargar.}
+        \end{itemize}
+        \item Download\_server:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Server:    \emph{Información del servidor de descarga. Tiene el siguiente formato:}
+            \begin{itemize}
+                \item Host:    \emph{Dirección del servidor de descarga.}
+                \item Port:    \emph{Puerto del servidor de descarga.}
+            \end{itemize}
+        \end{itemize}
+        \item Download\_movie:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item Id\_movie:    \emph{Id de la película a descargar.}   
+        \end{itemize}
+        \item Movie\_information:    \emph{Header del mensaje. Contiene los siguientes elementos:}
+        \begin{itemize}
+            \item File\_name:    \emph{Nombre del archivo pedido.}   
+            \item File\_size:    \emph{Tamaño del archivo pedido.}   
+        \end{itemize}
+    \end{itemize}
+\end{enumerate}
+
+\clearpage
+\section*{Implementación}
+La implementación del proyecto se decidió realizar en \emph{Python}. Esto se debe a varias razones entre las cuales 
+destacan la familiaridad de los desarrolladores con el lenguaje, las bondades de los lenguajes orientados a objetos
+y la amplia documentación con la que cuenta \emph{Python}.
+
+\subsection*{Librerías utilizadas}
+
+\subsubsection*{Twisted}
+\textbf{Twisted} es una librería para el desarrollo de aplicaciones de red. Contiene una gran cantidad de protocolos, servidores y clientes 
+listo para ser usados, así como también incluye una interfaz para la creación de protocolos a la medida del usuario. 
+
+En el contexto de \textbf{GGGOM} se utilizó para la definición de los protocolos a implementar y el manejo de las conexiones.
+
+\subsubsection*{Cmd}
+\textbf{Cmd} es un modulo incluido en python que provee un marco de desarollo para la escritura de interpretadores de comandos.
+
+Se utilizó en el proyecto para la implementación de los interpretadores de comandos de cada uno de los actores.
+
+\subsubsection*{Tabulate}
+\textbf{Tabulate} es una librería de python que facilita la impresión de estructuras de datos complejas por pantalla. 
+
+Se utilizó para imprimir los resultados de los comandos que involucran estructuras complejas como lo son la lista de películas o la lista de clientes.
+
+\subsection*{Estructura del código}
+
+\subsubsection*{Twisted}
+Antes de hablar de la estructura del código implementado es conveniente aclarar un poco la interfaz especificada por Twisted.
+Para la definición de un protocolo con Twisted es necesario implementar un par de clases. La primera es una clase que herede de \emph{Protocol} y es
+donde se definirán las acciones a realizar para cada conexión mediante ese protocolo. La segunda clase debe heredar de \emph{Factory} y será la clase
+que cree cada una de las instancias del Protocolo y mantiene información persistente entre instancias.
+
+\subsubsection*{Archivos por actor}
+Para cada uno de los actores se definieron 4 archivos llamados \emph{Actor}, \emph{Actor}.py, \emph{Actor}\_service.py y \emph{Actor}\_factory.py. 
+Por ejemplo, para el cliente existen los archivos \textbf{client}, \textbf{client.py}, \textbf{client\_service.py} y \textbf{client\_factory.py}.
+La función de cada archivo es la siguiente:
+
+\begin{itemize} 
+    \item \textbf{\emph{Actor}:} es un script sencillo que lee los argumentos de pantalla e instancia las clases iniciales.
+    \item \textbf{\emph{Actor}.py:} Contiene la definición del interpretador así como la clase que representa al actor.
+    \item \textbf{\emph{Actor}\_service.py:} define una interfaz que le permite al interpretador invocar a los métodos del protocolo de una manera más sencilla.
+    \item \textbf{\emph{Actor}\_factory.py:} contiene las definiciones de los protocolos que involucran al actor y sus clases factory correspondientes.
+\end{itemize}
+
+\subsubsection*{Archivos comunes}
+\begin{itemize}
+    \item \textbf{client\_item.py:} Contiene la clase \emph{ClientItem} que define a un cliente del sistema.
+    \item \textbf{server\_item.py:} Contiene la clase \emph{ServerItem} que define a un servidor.
+    \item \textbf{common.py:} Contiene la definición de clases auxiliares.
+    \item \textbf{movie.py:} Contiene la definición de la clase \emph{Movie} que representa a una pelicula.
+    \item \textbf{request.py:} Contiene la definición de la clase \emph{Request}.
+\end{itemize}
+
+
+\end{document}
+
