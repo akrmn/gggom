@@ -20,7 +20,7 @@ from movie import Movie
 class ClientProtocol(XmlStream):
 
     def __init__(self):
-        XmlStream.__init__(self)    # possibly unnecessary
+        XmlStream.__init__(self)
         self._initializeStream()
 
     def onDocumentStart(self, elementRoot):

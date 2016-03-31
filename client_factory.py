@@ -21,7 +21,7 @@ from server_item import ServerItem
 class RegisterServerProtocol(XmlStream):
 
     def __init__(self):
-        XmlStream.__init__(self)    # possibly unnecessary
+        XmlStream.__init__(self)
         self._initializeStream()
 
     def connectionMade(self):
@@ -59,7 +59,7 @@ class Register(ClientFactory):
 class ListMovieServerProtocol(XmlStream):
 
     def __init__(self):
-        XmlStream.__init__(self)    # possibly unnecessary
+        XmlStream.__init__(self)
         self._initializeStream()
         self.movies = []
 
@@ -103,7 +103,7 @@ class ListMovies(ClientFactory):
 class DownloadMovieCentralServerProtocol(XmlStream):
 
     def __init__(self):
-        XmlStream.__init__(self)    # possibly unnecessary
+        XmlStream.__init__(self)
         self._initializeStream()
         self.download_server = None
 
@@ -115,8 +115,7 @@ class DownloadMovieCentralServerProtocol(XmlStream):
 
     def onDocumentStart(self, elementRoot):
         """ The root tag has been parsed """
-        if elementRoot.name == 'download_from':
-            self.action = 'download_from'
+        self.action = elementRoot.name
 
     def onElement(self, element):
         """ Children/Body elements parsed """
@@ -128,11 +127,12 @@ class DownloadMovieCentralServerProtocol(XmlStream):
     def onDocumentEnd(self):
         """ Parsing has finished, you should send your response now """
         if self.action == 'download_from':
-            if self.download_server is not None:
-                self.factory.deferred.callback(self.download_server)
-            else:
-                self.factory.deferred.errback(
-                    Failure('No server available for download'))
+            self.factory.deferred.callback(self.download_server)
+            self.factory.lock.release()
+        elif self.action == 'unavailable':
+            self.factory.deferred.errback(
+                Exception('No server available for download'))
+            self.factory.lock.release()
 
     def closeConnection(self):
         self.transport.loseConnection()
@@ -149,6 +149,11 @@ class DownloadMovie(ClientFactory):
         self.deferred = Deferred()
         self.id_movie = id_movie
         self.username = username
+        self.lock = Lock()
+
+    def clientConnectionFailed(self, connector, reason):
+        self.deferred.errback(reason)
+        self.lock.release()
 
 
 class ReceiveMovieProtocol(basic.LineReceiver):

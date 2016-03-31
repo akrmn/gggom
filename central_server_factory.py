@@ -21,7 +21,7 @@ from request import Request
 class ClientProtocol(XmlStream):
 
     def __init__(self):
-        XmlStream.__init__(self)    # possibly unnecessary
+        XmlStream.__init__(self)
         self._initializeStream()
 
     def onDocumentStart(self, elementRoot):
@@ -61,20 +61,24 @@ class ClientProtocol(XmlStream):
 
     def choose_download_server(self, movie):
         mov = self.factory.central_server.movies.get_movie(movie)
-        # Ahorita solo elegimos el primero de la lista, idealmente queremos el
-        # que sea el mejor, no el primero
-        download_server = self.factory.central_server.movies.get_best_download_server(mov)
-        request = Element((None, 'download_from'))
-        s = request.addElement('server')
-        s['host'] = download_server.host
-        s['port'] = str(download_server.port)
-        client = self.factory.central_server.clients.get_client(self.username)
-        req = Request(mov, download_server, client)
-        self.factory.central_server.clients.add_client(client, req)
-        server = self.factory.central_server.servers.get_server(download_server)
-        server.add_download(req)
-        self.factory.central_server.requests.add_request(req)
-        self.send(request)
+
+        if mov is not None:
+            reply = Element((None, 'download_from'))
+            download_server = self.factory.central_server.movies.get_best_download_server(mov)
+            s = reply.addElement('server')
+            s['host'] = download_server.host
+            s['port'] = str(download_server.port)
+            client = self.factory.central_server.clients.get_client(self.username)
+            req = Request(mov, download_server, client)
+            self.factory.central_server.clients.add_client(client, req)
+            server = self.factory.central_server.servers.get_server(download_server)
+            server.add_download(req)
+            self.factory.central_server.requests.add_request(req)
+            self.send(reply)
+        else:
+            reply = Element((None, 'unavailable'))
+            self.send(reply)
+
 
     def list_movies(self):
         request = Element((None, 'movie_list'))

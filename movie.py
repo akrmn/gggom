@@ -70,8 +70,11 @@ class MovieDict:
         return self.movies[movie].servers[0]
 
     def get_best_download_server(self, movie):
-        selected_server = self.movies[movie].servers[0]
-        for server in self.movies[movie].servers:
-            if len(selected_server.active_downloads) >= len(server.active_downloads):
-                selected_server = server
-        return selected_server
+        if movie in self.movies:
+            selected_server = self.movies[movie].servers[0]
+            for server in self.movies[movie].servers:
+                if len(selected_server.active_downloads) >= len(server.active_downloads):
+                    selected_server = server
+            return selected_server
+        else:
+            return None

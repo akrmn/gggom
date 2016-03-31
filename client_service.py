@@ -34,9 +34,12 @@ class ClientService:
     def download(self, username, movie, callback, errback):
         factory = DownloadMovie(username, movie)
         factory.deferred.addCallbacks(callback, errback)
+        factory.lock.acquire()
 
         self.reactor.callFromThread(
             self.reactor.connectTCP, self.host, self.port, factory)
+
+        factory.lock.acquire()
 
     def download_from_download_server(self, username, movie, server,
                                       callback, errback):
@@ -46,4 +49,5 @@ class ClientService:
         print('I\'m going to connect to:', server.host, server.port)
         self.reactor.callFromThread(
             self.reactor.connectTCP, server.host, server.port, factory)
+
         return factory.deferred
