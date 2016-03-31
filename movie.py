@@ -5,21 +5,22 @@ from server_item import ServerList
 
 class Movie:
     """ Stores relevant info about a movie"""
-    def __init__(self, id_movie, title, size):
+    def __init__(self, id_movie, title, size, path):
         self.id_movie = id_movie
         self.title = title
         self.size = size
+        self.path = path
 
     def to_row(self):
-        return [self.id_movie, self.title, self.size]
+        return [self.id_movie, self.title, self.size, self.path]
 
     def __str__(self):
         return("id: " + self.id_movie + ", title: " + self.title +
-               ", size: " + str(self.size))
+               ", size: " + str(self.size) + ", path: " + self.path)
 
     def __repr__(self):
         return("Movie(" + self.id_movie + ", " + self.title + ", " +
-               str(self.size) + ")")
+               str(self.size) + self.path + ")")
 
     def __eq__(self, other):
         return self.id_movie == other.id_movie

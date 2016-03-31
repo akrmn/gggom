@@ -3,17 +3,19 @@
 
 from __future__ import print_function
 from twisted.internet.protocol import ClientFactory as TwistedClientFactory
+from twisted.internet.protocol import ServerFactory
 from twisted.words.xish.xmlstream import XmlStream
 from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element, IElement
 from twisted.python.failure import Failure
+from twisted.protocols import basic
 
 import xml.etree.cElementTree as ET
+import os, json
 
 from threading import Lock
 
 from movie import Movie
-
 
 class ClientProtocol(XmlStream):
 
@@ -122,3 +124,57 @@ class Register(ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         self.deferred.errback(reason)
         self.lock.release()
+
+
+class SendMovieProtocol(basic.LineReceiver):
+    def __init__(self, path):
+        """ """
+        self.path = path
+
+        self.infile = open(self.path, 'rb')
+        self.insize = os.stat(self.path).st_size
+
+        self.result = None
+        self.completed = False
+
+    def cbTransferCompleted(self):
+        """ """
+        self.completed = True
+        self.transport.loseConnection()
+
+    def connectionMade(self):
+        """ """
+        instruction = dict(file_size=self.insize,
+                           original_file_name=os.path.basename(self.path))
+        instruction = json.dumps(instruction)
+        self.transport.write(instruction + '\r\n')
+        sender = basic.FileSender()
+        d = sender.beginFileTransfer(self.infile, self.transport,
+                                     self._monitor)
+        d.addCallback(self.cbTransferCompleted)
+
+    def connectionLost(self, reason):
+        """
+            NOTE: reason is a twisted.python.failure.Failure instance
+        """
+        basic.LineReceiver.connectionLost(self, reason)
+        print(' - connectionLost\n  * ', reason.getErrorMessage())
+        self.infile.close()
+        if self.completed:
+            self.controller.completed.callback(self.result)
+        else:
+            self.controller.completed.errback(reason)
+
+
+class SendMovie(ServerFactory):
+    """ movie sender factory """
+    protocol = SendMovieProtocol
+
+    def __init__(self, path):
+        """ """
+        self.path = path
+
+    def clientConnectionFailed(self, connector, reason):
+        """ """
+        ClientFactory.clientConnectionFailed(self, connector, reason)
+        self.controller.completed.errback(reason)

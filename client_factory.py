@@ -7,6 +7,10 @@ from twisted.words.xish.xmlstream import XmlStream
 from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element
 from twisted.python.failure import Failure
+from twisted.protocols import basic
+import json, os
+
+
 
 from threading import Lock
 
@@ -145,3 +149,57 @@ class DownloadMovie(ClientFactory):
         self.deferred = Deferred()
         self.id_movie = id_movie
         self.username = username
+
+
+class ReceiveMovieProtocol(basic.LineReceiver):
+    """ Movie Receiver """
+
+    def __init__(self):
+        self.outfile = None
+        self.remain = 0
+        self.crc = 0
+
+    def lineReceived(self, line):
+        """ """
+        self.instruction = json.loads(line)
+        self.size = self.instruction['file_size']
+        original_fname = self.instruction.get('original_file_name', 'movie.mp4')
+
+        self.outfilename = os.path.join(os.getcwd(), original_fname)
+
+        try:
+            self.outfile = open(self.outfilename, 'wb')
+        except Exception, value:
+            print(' ! Unable to open file', self.outfilename, value)
+            self.transport.loseConnection()
+            return
+
+        self.remain = int(self.size)
+        self.setRawMode()
+
+    def rawDataReceived(self, data):
+        """ """
+        self.remain -= len(data)
+        self.outfile.write(data)
+
+    def connectionMade(self):
+        """ """
+        basic.LineReceiver.connectionMade(self)
+
+    def connectionLost(self, reason):
+        """ """
+        basic.LineReceiver.connectionLost(self, reason)
+        if self.outfile:
+            self.outfile.close()
+
+        # Problem uploading - tmpfile will be discarded
+        if self.remain != 0:
+            os.remove(self.outfilename)
+
+
+class ReceiveMovieFactory(ClientFactory):
+    """ Movie receiver factory """
+    protocol = ReceiveMovieProtocol
+
+    def __init__(self):
+        """ """
