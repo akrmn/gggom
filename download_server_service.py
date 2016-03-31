@@ -2,7 +2,7 @@
 """GGGOM Geodistributed Getter Of Movies Download Server Services."""
 
 from __future__ import print_function
-from download_server_factory import ClientFactory, Register
+from download_server_factory import Register, SendMovie
 
 
 class ClientService:
@@ -14,7 +14,7 @@ class ClientService:
         self.start_listening(movies)
 
     def start_listening(self, movies):
-        factory = ClientFactory(movies)
+        factory = SendMovie("../../pretaller.pdf")
 
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, factory)

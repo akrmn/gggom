@@ -177,6 +177,7 @@ class DownloadServer:
             reactor.callFromThread(self.reactor.stop)
 
         self.load_movies()
+        self.client_service.add_movie_list(self.movies)
 
         self.spinner.start("Registering at %s:%i" % (self.host, self.port))
 
