@@ -32,6 +32,29 @@ class GggomDownloadServerShell(Cmd):
     # ======================================================================= #
     # Commands                                                                #
     # ======================================================================= #
+    def do_register(self, arg):
+        """Register on the central server."""
+        args = arg.split()
+
+        if len(args) != 0:
+            common.error("`register` doesn\'t exepect any arguments")
+
+        else:
+            def callback(result):
+                self.download_server.spinner.stop()
+                if result == 'Ok':
+                    print('Registered successfully')
+                elif result == 'already_registered':
+                    print('Already registered')
+
+            def errback(reason):
+                self.download_server.spinner.stop()
+                common.error(reason.getErrorMessage())
+                reactor.callFromThread(self.reactor.stop)
+
+            self.download_server.spinner.start("Registering")
+            self.download_server.server_service.register(callback, errback)
+
     def do_current_downloads(self, arg):
         """List the current downloads."""
         args = arg.split()
@@ -136,10 +159,12 @@ class DownloadServer:
         self.current_downloads = {}
         self.finished_downloads = {}
         self.loyal_clients = {}
-        self.client_service = ClientService(self)  
         self.server_service = CentralServerService(self)
+        self.client_service = ClientService(self)  
         self.shell = GggomDownloadServerShell(self)
         self.spinner = common.Spinner()
+
+        self.load_movies()
 
     def load_movies(self):
         # FIXME: This should ALL be loaded from an XML file
@@ -170,22 +195,8 @@ class DownloadServer:
         self.loyal_clients[oscar] = 2
         self.loyal_clients[moises] = 6
 
-    def onStart(self):
-        def callback(result):
-            self.spinner.stop()
-            self.shell.cmdloop()
-
-        def errback(reason):
-            self.spinner.stop()
-            common.error(reason.getErrorMessage())
-            reactor.callFromThread(self.reactor.stop)
-
-        self.load_movies()
-
-        self.spinner.start("Registering at %s:%i" % (self.host, self.port))
-
-        self.server_service.register(callback, errback)
+    #     # self.spinner.start("Registering at %s:%i" % (self.host, self.port))
 
     def run(self):
-        self.reactor.callInThread(self.onStart)
+        self.reactor.callInThread(self.shell.cmdloop)
         self.reactor.run()

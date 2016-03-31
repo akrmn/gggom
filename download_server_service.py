@@ -34,3 +34,5 @@ class CentralServerService:
 
         self.reactor.callFromThread(
             self.reactor.connectTCP, self.host, self.port, factory)
+
+        factory.lock.acquire()

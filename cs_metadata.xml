@@ -1,4 +1,4 @@
 <central_server>
 	<servers></servers>
-	<clients></clients>
+	<clients />
 </central_server>

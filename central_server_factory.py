@@ -162,11 +162,12 @@ class DownloadServerProtocol(XmlStream):
                 self.registration_ok()
             else:
                 print('Server', str(self.server), 'is already registered')
-                self.registration_failed('Server already registered')
+                self.registration_ok('already_registered')
 
-    def registration_ok(self):
+    def registration_ok(self, message=""):
         response = Element((None, 'registration_reply'))
         response['reply'] = 'Ok'
+        response['message'] = message
         self.send(response)
 
     def registration_failed(self, reason):
