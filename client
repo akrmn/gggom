@@ -9,7 +9,7 @@ import signal
 def parse_args():
     usage = ("%prog [options] server_ip[:port]...\n\n"
              "This is the client program.\n"
-             "If no port is given for the server, 40 is used.")
+             "If no port is given for the server, 4040 is used.")
 
     parser = OptionParser(usage)
 
@@ -21,7 +21,7 @@ def parse_args():
     def parse_address(arg):
         if ':' not in arg:
             host = arg
-            port = '40'
+            port = '4040'
         else:
             host, port = arg.split(':', 1)
 

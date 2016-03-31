@@ -9,12 +9,12 @@ import signal
 def parse_args():
     usage = ("%prog [options] server_ip[:port]...\n\n"
              "This is the download server program.\n"
-             "If no port is given for the central server, 26 is used.\n"
-             "If no port is given for clients, 16 is used.")
+             "If no port is given for the central server, 2626 is used.\n"
+             "If no port is given for clients, 1616 is used.")
 
     parser = OptionParser(usage)
 
-    help = "The port to listen on. Default is 16."
+    help = "The port to listen on. Default is 1616."
     parser.add_option('-c', '--client-port', type='int', help=help,
                       dest="client_port")
 
@@ -26,7 +26,7 @@ def parse_args():
     def parse_address(arg):
         if ':' not in arg:
             host = arg
-            port = '26'
+            port = '2626'
         else:
             host, port = arg.split(':', 1)
 
@@ -38,7 +38,7 @@ def parse_args():
     host, port = parse_address(args[0])
 
     if options.client_port is None:
-        client_port = 16
+        client_port = 1616
     else:
         client_port = int(options.client_port)
 

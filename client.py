@@ -62,7 +62,7 @@ class GggomClientShell(Cmd):
 
                 print(tabulate(
                     [movie.to_row() for movie in result],
-                    headers=['Id', 'Title', 'Size'], tablefmt="psql"))
+                    headers=['Id', 'Title', 'Size', 'Path'], tablefmt="psql"))
 
             def errback(reason):
                 self.client.spinner.stop()
