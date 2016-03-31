@@ -170,7 +170,6 @@ class ReceiveMovieProtocol(basic.LineReceiver):
 
         try:
             self.outfile = open(self.outfilename, 'wb')
-            self.factory.deferred.callback(self.factory.download_server)
         except Exception, value:
             print(' ! Unable to open file', self.outfilename, value)
             self.transport.loseConnection()
@@ -193,6 +192,7 @@ class ReceiveMovieProtocol(basic.LineReceiver):
         basic.LineReceiver.connectionLost(self, reason)
         if self.outfile:
             self.outfile.close()
+            self.factory.deferred.callback(self.factory.download_server)
 
         # Problem uploading - tmpfile will be discarded
         if self.remain != 0:
