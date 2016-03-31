@@ -63,7 +63,7 @@ class ClientProtocol(XmlStream):
         mov = self.factory.central_server.movies.get_movie(movie)
         # Ahorita solo elegimos el primero de la lista, idealmente queremos el
         # que sea el mejor, no el primero
-        download_server = self.factory.central_server.movies.get_first_download_server(mov)
+        download_server = self.factory.central_server.movies.get_best_download_server(mov)
         request = Element((None, 'download_from'))
         s = request.addElement('server')
         s['host'] = download_server.host
