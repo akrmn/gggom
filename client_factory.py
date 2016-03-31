@@ -8,8 +8,8 @@ from twisted.internet.defer import Deferred
 from twisted.words.xish.domish import Element
 from twisted.python.failure import Failure
 from twisted.protocols import basic
-import json, os
-
+import json
+import os
 
 
 from threading import Lock
@@ -163,12 +163,14 @@ class ReceiveMovieProtocol(basic.LineReceiver):
         """ """
         self.instruction = json.loads(line)
         self.size = self.instruction['file_size']
-        original_fname = self.instruction.get('original_file_name', 'movie.mp4')
+        original_fname = self.instruction.get('original_file_name',
+                                              'movie.mp4')
 
         self.outfilename = os.path.join(os.getcwd(), original_fname)
 
         try:
             self.outfile = open(self.outfilename, 'wb')
+            self.factory.deferred.callback(self.factory.download_server)
         except Exception, value:
             print(' ! Unable to open file', self.outfilename, value)
             self.transport.loseConnection()
@@ -197,9 +199,13 @@ class ReceiveMovieProtocol(basic.LineReceiver):
             os.remove(self.outfilename)
 
 
-class ReceiveMovieFactory(ClientFactory):
+class ReceiveMovie(ClientFactory):
     """ Movie receiver factory """
     protocol = ReceiveMovieProtocol
 
-    def __init__(self):
+    def __init__(self, username, movie, server):
         """ """
+        self.deferred = Deferred()
+        self.username = username
+        self.movie = movie
+        self.download_server = server

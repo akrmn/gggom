@@ -7,7 +7,6 @@ from twisted.internet import reactor
 from tabulate import tabulate
 
 from client_service import ClientService
-from movie import Movie
 import common
 
 
@@ -82,8 +81,14 @@ class GggomClientShell(Cmd):
             common.error('`download` expects one argument.')
         else:  # I think it could work for many movies at the same time
             movie = args[0]
+
+            def callback2(result):
+                print('Getting movie from:', result)
+
             def callback(result):
+                self.client.download_server = result
                 print('Download movie from:', result)
+                self.client.service.download_from_download_server(self.client.username, movie, result, callback2, errback)
 
             def errback(reason):
                 common.error(reason.getErrorMessage())

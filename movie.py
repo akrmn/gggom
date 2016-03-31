@@ -5,7 +5,7 @@ from server_item import ServerList
 
 class Movie:
     """ Stores relevant info about a movie"""
-    def __init__(self, id_movie, title, size, path):
+    def __init__(self, id_movie, title, size, path=""):
         self.id_movie = id_movie
         self.title = title
         self.size = size
