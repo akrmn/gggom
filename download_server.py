@@ -136,9 +136,8 @@ class DownloadServer:
         self.current_downloads = {}
         self.finished_downloads = {}
         self.loyal_clients = {}
-        self.client_service = ClientService(self.reactor, client_port)
-        self.server_service = CentralServerService(self.reactor, host, port,
-                                                   client_port)
+        self.client_service = ClientService(self)  
+        self.server_service = CentralServerService(self)
         self.shell = GggomDownloadServerShell(self)
         self.spinner = common.Spinner()
 
@@ -177,11 +176,10 @@ class DownloadServer:
             reactor.callFromThread(self.reactor.stop)
 
         self.load_movies()
-        self.client_service.add_movie_list(self.movies)
 
         self.spinner.start("Registering at %s:%i" % (self.host, self.port))
 
-        self.server_service.register(self.movies, callback, errback)
+        self.server_service.register(callback, errback)
 
     def run(self):
         self.reactor.callInThread(self.onStart)

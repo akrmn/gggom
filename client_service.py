@@ -46,7 +46,6 @@ class ClientService:
         factory = ReceiveMovie(username, movie, server)
         factory.deferred.addCallbacks(callback, errback)
 
-        print('I\'m going to connect to:', server.host, server.port)
         self.reactor.callFromThread(
             self.reactor.connectTCP, server.host, server.port, factory)
 

@@ -83,7 +83,7 @@ class GggomClientShell(Cmd):
             movie = args[0]
 
             def callback2(result):
-                print('Getting movie from:', result)
+                print('Download finished', result)
 
             def callback(result):
                 self.client.download_server = result

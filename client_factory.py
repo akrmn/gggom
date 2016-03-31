@@ -156,7 +156,7 @@ class DownloadMovie(ClientFactory):
         self.lock.release()
 
 
-class ReceiveMovieProtocol(basic.LineReceiver):
+class ReceiveMovieProtocol(XmlStream):
     """ Movie Receiver """
 
     def __init__(self):
@@ -166,42 +166,46 @@ class ReceiveMovieProtocol(basic.LineReceiver):
 
     def lineReceived(self, line):
         """ """
-        self.instruction = json.loads(line)
-        self.size = self.instruction['file_size']
-        original_fname = self.instruction.get('original_file_name',
-                                              'movie.mp4')
+        print(line)
+        # self.instruction = json.loads(line)
+        # self.size = self.instruction['file_size']
+        # original_fname = self.instruction.get('original_file_name',
+        #                                       'movie.mp4')
 
-        self.outfilename = os.path.join(os.getcwd(), original_fname)
+        # self.outfilename = os.path.join(os.getcwd(), original_fname)
 
-        try:
-            self.outfile = open(self.outfilename, 'wb')
-        except Exception, value:
-            print(' ! Unable to open file', self.outfilename, value)
-            self.transport.loseConnection()
-            return
+        # try:
+        #     self.outfile = open(self.outfilename, 'wb')
+        # except Exception, value:
+        #     print(' ! Unable to open file', self.outfilename, value)
+        #     self.transport.loseConnection()
+        #     return
 
-        self.remain = int(self.size)
-        self.setRawMode()
+        # self.remain = int(self.size)
+        # self.setRawMode()
 
-    def rawDataReceived(self, data):
-        """ """
-        self.remain -= len(data)
-        self.outfile.write(data)
+    # def rawDataReceived(self, data):
+    #     """ """
+    #     self.remain -= len(data)
+    #     self.outfile.write(data)
 
     def connectionMade(self):
         """ """
-        basic.LineReceiver.connectionMade(self)
+        print("connected")
+        LineReceiver.connectionMade(self)
 
     def connectionLost(self, reason):
         """ """
-        basic.LineReceiver.connectionLost(self, reason)
-        if self.outfile:
-            self.outfile.close()
-            self.factory.deferred.callback(self.factory.download_server)
+        self.factory.deferred.callback(self.factory.download_server)
 
-        # Problem uploading - tmpfile will be discarded
-        if self.remain != 0:
-            os.remove(self.outfilename)
+        # basic.LineReceiver.connectionLost(self, reason)
+        # if self.outfile:
+        #     self.outfile.close()
+        #     self.factory.deferred.callback(self.factory.download_server)
+
+        # # Problem uploading - tmpfile will be discarded
+        # if self.remain != 0:
+        #     os.remove(self.outfilename)
 
 
 class ReceiveMovie(ClientFactory):
@@ -210,7 +214,11 @@ class ReceiveMovie(ClientFactory):
 
     def __init__(self, username, movie, server):
         """ """
+
         self.deferred = Deferred()
         self.username = username
         self.movie = movie
         self.download_server = server
+
+    def clientConnectionFailed(self, connector, reason):
+        self.deferred.errback(reason)

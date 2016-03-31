@@ -2,33 +2,33 @@
 """GGGOM Geodistributed Getter Of Movies Download Server Services."""
 
 from __future__ import print_function
-from download_server_factory import Register, SendMovie
+from download_server_factory import Register, ClientListener
 
 
 class ClientService:
-    def __init__(self, reactor, port):
-        self.reactor = reactor
-        self.port = int(port)
+    def __init__(self, download_server):
+        self.reactor = download_server.reactor
+        self.port = int(download_server.client_port)
+        self.download_server = download_server
+        self.start_listening()
 
-    def add_movie_list(self, movies):
-        self.start_listening(movies)
-
-    def start_listening(self, movies):
-        factory = SendMovie("../../pretaller.pdf")
+    def start_listening(self):
+        factory = ClientListener(self.download_server)
 
         self.reactor.callFromThread(
             self.reactor.listenTCP, self.port, factory)
 
 
 class CentralServerService:
-    def __init__(self, reactor, host, port, my_port):
-        self.reactor = reactor
-        self.host = host
-        self.port = port
-        self.my_port = int(my_port)
+    def __init__(self, download_server):
+        self.reactor = download_server.reactor
+        self.host = download_server.host
+        self.port = download_server.port
+        self.my_port = int(download_server.client_port)
+        self.download_server = download_server
 
-    def register(self, movies, callback, errback):
-        factory = Register(movies, self.my_port)
+    def register(self, callback, errback):
+        factory = Register(self.download_server.movies, self.my_port)
         factory.deferred.addCallbacks(callback, errback)
         factory.lock.acquire()
 

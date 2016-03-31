@@ -122,7 +122,7 @@ class ClientFactory(TwistedClientFactory):
 class DownloadServerProtocol(XmlStream):
 
     def __init__(self):
-        XmlStream.__init__(self)    # possibly unnecessary
+        XmlStream.__init__(self)
         self._initializeStream()
         self.movie_list = []
 
