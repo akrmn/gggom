@@ -182,13 +182,20 @@ class DownloadServerProtocol(XmlStream):
         tree = ET.parse('cs_metadata.xml')
         root = tree.getroot()
         servers = root.find('servers')
-        server = ET.SubElement(
-            servers, "download_server", host=str(self.host), port=str(self.port))
-        for movie in self.movie_list:
-            ET.SubElement(
-                server, "movie",
-                id=str(movie.id_movie), size=str(movie.size), path=movie.path).text = movie.title
-        tree.write("cs_metadata.xml")
+        if not self.find_server_xml(servers,str(self.host)):
+            server = ET.SubElement(
+                servers, "download_server", host=str(self.host), port=str(self.port))
+            for movie in self.movie_list:
+                ET.SubElement(
+                    server, "movie",
+                    id=str(movie.id_movie), size=str(movie.size), path=movie.path).text = movie.title
+            tree.write("cs_metadata.xml")
+
+    def find_server_xml(self,elements,host):
+        for element in elements:
+            if element.attrib['host'] == host:
+                return True
+        return False
 
 
 class DownloadServerFactory(ServerFactory):

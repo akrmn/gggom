@@ -1,4 +1,4 @@
 <central_server>
-	<servers><download_server host="127.0.0.1" port="1616"><movie id="fakeone" path="/home/oscar/Documentos/planilla_sc.pdf" size="57">A random PDF File.</movie></download_server></servers>
+	<servers></servers>
 	<clients />
 </central_server>
