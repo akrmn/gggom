@@ -77,10 +77,6 @@ class GggomCentralServerShell(Cmd):
                 print("%i server(s):" % len(
                     servers.servers))
                 print('')
-                # We want to do this with tabulate and using the list in the
-                # ServerItem class, right now when I add a movie it's adding it
-                # for all servers I have no idea why, until we fix that this
-                # code gets us the right information.
                 for server in servers.servers:
                     print('server:')
                     print(str(server))
@@ -106,7 +102,6 @@ class GggomCentralServerShell(Cmd):
             common.error('`clients_by_server` doesn\'t expect any arguments.')
         else:
             servers = self.central_server.download_service.get_servers()
-            requests = self.central_server.client_service.get_requests()
 
             if not servers.is_empty():
                 print("%i server(s):" % len(
@@ -115,13 +110,13 @@ class GggomCentralServerShell(Cmd):
                 for server in servers.servers:
                     print('server:')
                     print(str(server))
-                    print('downloads:')
-                    if not requests.is_empty():
+                    print('clients:')
+                    if server.clients:
+                        clients = [client[0] for client in server.clients]
                         print(tabulate(
-                            [requests.client for request
-                             in requests.requests
-                             if server == request.server],
-                            headers=['Client'],
+                            [[c.username, c.host, str(c.port)] for c
+                             in clients],
+                            headers=['Username', 'Host', 'Port'],
                             tablefmt="psql"))
                         print('')
                     else:

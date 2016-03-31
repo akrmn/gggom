@@ -17,6 +17,9 @@ class ClientItem:
     def __hash__(self):
         return hash((self.username))
 
+    def to_row(self):
+        [self.username]
+
 
 class ClientDict:
     """ A dictionary of clients. Type is {ClientItem, }"""

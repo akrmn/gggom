@@ -21,7 +21,6 @@ class ServerItem:
         return (str(self.host), self.port)
 
     def add_download(self, request):
-        print('I\'m adding request:', str(request), 'to server:', str(self))
         self.active_downloads.append(request)
         exists = False
         for c in self.clients:

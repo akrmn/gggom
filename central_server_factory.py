@@ -74,11 +74,6 @@ class ClientProtocol(XmlStream):
         server = self.factory.central_server.servers.get_server(download_server)
         server.add_download(req)
         self.factory.central_server.requests.add_request(req)
-        for s in self.factory.central_server.servers.servers:
-            print(id(s))
-            print('req:')
-            for r in s.active_downloads:
-                print(r)
         self.send(request)
 
     def list_movies(self):
