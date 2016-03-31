@@ -87,6 +87,7 @@ class RegisterServerProtocol(XmlStream):
             m['id_movie'] = movie.id_movie
             m['title'] = movie.title
             m['size'] = str(movie.size)
+            m['path'] = movie.path
         self.send(request)
 
     def onDocumentStart(self, elementRoot):

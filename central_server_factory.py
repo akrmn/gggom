@@ -87,6 +87,7 @@ class ClientProtocol(XmlStream):
             m['id_movie'] = movie.id_movie
             m['title'] = movie.title
             m['size'] = str(movie.size)
+            m['path'] = movie.path
         self.send(request)
 
     def registration_ok(self):
@@ -139,7 +140,8 @@ class DownloadServerProtocol(XmlStream):
             id_movie = str(element.attributes['id_movie'])
             title = str(element.attributes['title'])
             size = int(element.attributes['size'])
-            self.movie_list.append(Movie(id_movie, title, size))
+            path = element.attributes['path']
+            self.movie_list.append(Movie(id_movie, title, size,path))
 
     def onDocumentEnd(self):
         """ Parsing has finished, you should send your response now """
@@ -185,7 +187,7 @@ class DownloadServerProtocol(XmlStream):
         for movie in self.movie_list:
             ET.SubElement(
                 server, "movie",
-                id=str(movie.id_movie), size=str(movie.size)).text = movie.title
+                id=str(movie.id_movie), size=str(movie.size), path=movie.path).text = movie.title
         tree.write("cs_metadata.xml")
 
 

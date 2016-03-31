@@ -1,1 +1,5 @@
-<download_server><movies><movie id="fakeone" size="35">Harry Potter and the Fakey Fake</movie><movie id="phoney" size="42">Draco Malfoy and the Dark Lord</movie></movies></download_server>
+<download_server>
+	<movies>
+		<movie id="fakeone" path="/home/oscar/Documentos/planilla_sc.pdf">A random PDF File.</movie>
+	</movies>
+</download_server>

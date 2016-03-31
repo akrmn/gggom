@@ -2,7 +2,7 @@
 """GGGOM Geodistributed Getter Of Movies Download Server."""
 
 from __future__ import print_function
-import signal
+import signal, os
 from cmd import Cmd
 from optparse import OptionParser
 from twisted.internet import reactor
@@ -148,7 +148,12 @@ class DownloadServer:
         my_movies = root.find('movies')
         n = 1
         for movie in my_movies:
-        	new_movie = Movie(movie.attrib['id'],movie.text,int(movie.attrib['size']))
+        	path = movie.attrib['path']
+        	total_size = os.path.getsize(path)
+        	size = total_size / 1024
+        	if size == 0 or total_size%1024 != 0:
+        		size+=1
+        	new_movie = Movie(movie.attrib['id'],movie.text,size,path)
         	self.finished_downloads[new_movie] = n
         	self.movies.append(new_movie)
         	n+=1
