@@ -25,7 +25,7 @@ class ServerItem:
         exists = False
         for c in self.clients:
             if request.client.username == c[0].username:
-                c[1] += 1
+                c = (c[0], c[1] + 1)
                 exists = True
         if not exists:
             self.clients.append((request.client, 1))
@@ -37,7 +37,7 @@ class ServerItem:
         exists = False
         for m in self.downloaded_movies:
             if request.movie.username == m[0].username:
-                m[1] += 1
+                m = (m[0], m[1] + 1)
                 exists = True
         if not exists:
             self.downloaded_movies.append((request.movie, 1))
