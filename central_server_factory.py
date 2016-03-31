@@ -105,9 +105,16 @@ class ClientProtocol(XmlStream):
         tree = ET.parse('cs_metadata.xml')
         root = tree.getroot()
         clients = root.find('clients')
-        ET.SubElement(
-            clients, "client", username=self.username, host=str(self.host), port=str(self.port))
-        tree.write("cs_metadata.xml")
+        if not self.find_client_xml(clients,self.username):
+            ET.SubElement(
+                clients, "client", username=self.username, host=str(self.host), port=str(self.port))
+            tree.write("cs_metadata.xml")
+
+    def find_client_xml(self,clients,username):
+        for client in clients:
+            if client.attrib['username'] == username:
+                return True
+        return False
 
 
 class ClientFactory(TwistedClientFactory):
